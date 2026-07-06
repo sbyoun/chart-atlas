@@ -1249,16 +1249,18 @@ function App() {
         throw new Error(pick(locale, 'Spotify playlist URL was not returned.', 'Spotify 플레이리스트 URL을 받지 못했습니다.'))
       }
 
+      // Spotify can take a couple of minutes to expose a fresh playlist in the
+      // web player, so opening it automatically often lands on a 404. Leave a
+      // link the visitor clicks when ready instead.
       setPlaylistStatus({
         type: 'success',
         message: pick(
           locale,
-          `${playlist.name ?? 'Playlist'} created`,
-          `${playlist.name ?? '플레이리스트'} 생성 완료`,
+          `${playlist.name ?? 'Playlist'} created — click to open in Spotify`,
+          `${playlist.name ?? '플레이리스트'} 생성 완료 — 눌러서 Spotify에서 열기`,
         ),
         url,
       })
-      window.open(url, '_blank', 'noopener,noreferrer')
     } catch (error) {
       setPlaylistStatus({
         type: 'error',

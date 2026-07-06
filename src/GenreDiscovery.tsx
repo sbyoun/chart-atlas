@@ -1204,16 +1204,17 @@ function GenreDiscovery({
       const missedText = result.missedCount
         ? pick(locale, `, ${result.missedCount} missed`, `, 미매칭 ${result.missedCount}곡`)
         : ''
+      // No auto-open: fresh playlists can 404 in the Spotify web player for a
+      // couple of minutes, which reads as a failed creation.
       setPlaylistStatus({
         type: 'success',
         message: pick(
           locale,
-          `${result.playlist?.name || name} created: ${result.chartTrackCount || 0} chart tracks + ${result.seedMatchedCount || 0} seed tracks${missedText}`,
-          `${result.playlist?.name || name} 생성 완료: 현재 차트 ${result.chartTrackCount || 0}곡 + 대표곡 ${result.seedMatchedCount || 0}곡${missedText}`,
+          `${result.playlist?.name || name} created: ${result.chartTrackCount || 0} chart tracks + ${result.seedMatchedCount || 0} seed tracks${missedText} — click to open in Spotify`,
+          `${result.playlist?.name || name} 생성 완료: 현재 차트 ${result.chartTrackCount || 0}곡 + 대표곡 ${result.seedMatchedCount || 0}곡${missedText} — 눌러서 Spotify에서 열기`,
         ),
         url,
       })
-      window.open(url, '_blank', 'noopener,noreferrer')
     } catch (error) {
       setPlaylistStatus({
         type: 'error',
