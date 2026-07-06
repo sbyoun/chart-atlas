@@ -351,6 +351,13 @@ function hasApplePreview(profile: TrackProfile | undefined) {
   return Boolean(profile?.provider === 'apple' && profile.previewUrl)
 }
 
+function hasClearTopGenre(result: TasteResult) {
+  const [top, runnerUp] = result.rankedGenres
+  if (!top || top.likes <= 0) return false
+  if (!runnerUp) return true
+  return top.score > runnerUp.score
+}
+
 function describeTasteResult(result: TasteResult, locale: Locale) {
   const topGenre = result.topGenre
   const positiveGenres = result.rankedGenres
@@ -368,6 +375,28 @@ function describeTasteResult(result: TasteResult, locale: Locale) {
         '아직은 한 장르에 꽂혔다기보다 방 안을 천천히 둘러보는 귀에 가깝습니다. 한 번 더 돌면서 몇 곡에 확실히 좋아요나 싫어요를 눌러보면 취향 윤곽이 훨씬 선명해집니다.',
       ),
       chips: [pick(locale, 'Open-ended', '열린 취향'), pick(locale, 'Still scanning', '탐색 중')],
+    }
+  }
+
+  // A tied top score means there is no single winning genre; presenting the
+  // first tied entry as a confident "core taste" would just be deck order.
+  if (!hasClearTopGenre(result)) {
+    const tiedLeaders = result.rankedGenres.filter((genre) => genre.score === topGenre.score)
+    const leaderNames = tiedLeaders.slice(0, 3).map((genre) => genre.name)
+    const extraCount = tiedLeaders.length - leaderNames.length
+
+    return {
+      title: pick(
+        locale,
+        'Your taste runs wide — no single genre wins.',
+        '취향이 넓게 퍼져 있습니다 — 한 장르가 압도하지 않네요.',
+      ),
+      body: pick(
+        locale,
+        `${leaderNames.join(', ')}${extraCount > 0 ? ` and ${extraCount} more` : ''} finished in a dead heat, so naming one of them your core taste would be a coin flip. You enjoy a broad spread of styles. Stack two or more likes in the same genre next round and the profile will sharpen.`,
+        `${leaderNames.join(', ')}${extraCount > 0 ? ` 외 ${extraCount}개` : ''} 장르가 동점으로 끝나서, 이 중 하나를 핵심 취향이라고 단정할 수 없습니다. 여러 스타일을 고르게 즐기는 넓은 취향이에요. 다음 라운드에서 같은 장르에 좋아요가 두 개 이상 쌓이면 결이 선명해집니다.`,
+      ),
+      chips: [pick(locale, 'Broad taste', '넓은 취향'), ...leaderNames.slice(0, 2)],
     }
   }
 
@@ -403,11 +432,16 @@ function describeTasteResult(result: TasteResult, locale: Locale) {
           '좋아요가 많지는 않아서, 전체 성격표라기보다 가장 강한 장르 신호를 읽은 결과에 가깝습니다.',
         )
 
-  const confidence = result.likedCandidates.length >= 5
-    ? pick(locale, 'high-confidence', '확신 높은')
-    : result.likedCandidates.length >= 3
-      ? pick(locale, 'promising', '꽤 선명한')
-      : pick(locale, 'early signal', '초기 신호')
+  // Confidence tracks the winning genre's own likes and its margin over the
+  // runner-up, not the total like count spread across every genre.
+  const runnerUp = result.rankedGenres[1]
+  const scoreMargin = runnerUp ? topGenre.score - runnerUp.score : Number.POSITIVE_INFINITY
+  const confidence =
+    topGenre.likes >= 3 && scoreMargin >= 3
+      ? pick(locale, 'high-confidence', '확신 높은')
+      : topGenre.likes >= 2
+        ? pick(locale, 'promising', '꽤 선명한')
+        : pick(locale, 'early signal', '초기 신호')
 
   return {
     title: pick(
@@ -562,8 +596,9 @@ function TasteDiscovery({
   }, [sessionSeed, snapshot.snapshotDate])
 
   useEffect(() => {
-    const tracks = applePreviewCandidates
-      .slice(currentIndex, Math.min(applePreviewCandidates.length, currentIndex + 3))
+    // Resolve every deck profile before the sampler starts, so the progress
+    // denominator stays fixed instead of shrinking as unplayable cards drop out.
+    const tracks = candidates
       .filter((candidate) => !profiles.has(candidate.track.id))
       .filter((candidate) => !pendingProfileIdsRef.current.has(candidate.track.id))
       .map((candidate) => ({
@@ -600,9 +635,28 @@ function TasteDiscovery({
           return next
         })
       } catch {
-        for (const track of tracks) {
-          pendingProfileIdsRef.current.delete(track.id)
-        }
+        // Mark the batch as unavailable so the deck can settle instead of
+        // waiting forever on a failed profile request.
+        setProfiles((current) => {
+          const next = new Map(current)
+          for (const track of tracks) {
+            if (!next.has(track.id)) {
+              next.set(track.id, {
+                id: track.id,
+                title: track.title,
+                artist: track.artist,
+                imageUrl: '',
+                previewUrl: '',
+                sourceUrl: track.url || '',
+                embedUrl: '',
+                provider: 'none',
+                providerLabel: '',
+                playable: false,
+              })
+            }
+          }
+          return next
+        })
       } finally {
         for (const track of tracks) {
           pendingProfileIdsRef.current.delete(track.id)
@@ -611,7 +665,7 @@ function TasteDiscovery({
     }
 
     void loadProfiles()
-  }, [applePreviewCandidates, currentIndex, profiles])
+  }, [candidates, profiles])
 
   useEffect(() => {
     const audio = audioRef.current
@@ -698,7 +752,10 @@ function TasteDiscovery({
     })
 
     try {
-      const topGenreName = result.topGenre?.name || pick(locale, 'Taste Mix', '취향 믹스')
+      const topGenreName =
+        hasClearTopGenre(result) && result.topGenre
+          ? result.topGenre.name
+          : pick(locale, 'Taste Mix', '취향 믹스')
       const response = await fetch(apiUrl('/api/playlists/create-from-tracks'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -741,7 +798,10 @@ function TasteDiscovery({
     }
   }
 
-  if ((signalsStatus === 'loading' || snapshotLoading) && candidates.length === 0) {
+  if (
+    ((signalsStatus === 'loading' || snapshotLoading) && candidates.length === 0) ||
+    unresolvedProfileCount > 0
+  ) {
     return (
       <section className="taste-page taste-loading">
         <Loader2 size={22} />
