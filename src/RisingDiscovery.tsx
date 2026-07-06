@@ -625,16 +625,17 @@ function RisingDiscovery({
         throw new Error(pick(locale, 'Spotify playlist URL was not returned.', 'Spotify 플레이리스트 URL을 받지 못했습니다.'))
       }
 
+      // No auto-open: fresh playlists can 404 in the Spotify web player for a
+      // couple of minutes, which reads as a failed creation.
       setPlaylistStatus({
         type: 'success',
         message: pick(
           locale,
-          `${playlist.name ?? 'Rising playlist'} created`,
-          `${playlist.name ?? '라이징 플레이리스트'} 생성 완료`,
+          `${playlist.name ?? 'Rising playlist'} created — click to open in Spotify`,
+          `${playlist.name ?? '라이징 플레이리스트'} 생성 완료 — 눌러서 Spotify에서 열기`,
         ),
         url: playlist.openUrl,
       })
-      window.open(playlist.openUrl, '_blank', 'noopener,noreferrer')
     } catch (error) {
       setPlaylistStatus({
         type: 'error',

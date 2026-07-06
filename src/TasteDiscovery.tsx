@@ -722,16 +722,17 @@ function TasteDiscovery({
         throw new Error(payload.error || pick(locale, 'Failed to create the playlist.', '플레이리스트 생성에 실패했습니다.'))
       }
 
+      // No auto-open: fresh playlists can 404 in the Spotify web player for a
+      // couple of minutes, which reads as a failed creation.
       setPlaylistStatus({
         type: 'success',
         message: pick(
           locale,
-          `${payload.playlist.name || 'Taste playlist'} created`,
-          `${payload.playlist.name || '취향 플레이리스트'} 생성 완료`,
+          `${payload.playlist.name || 'Taste playlist'} created — click to open in Spotify`,
+          `${payload.playlist.name || '취향 플레이리스트'} 생성 완료 — 눌러서 Spotify에서 열기`,
         ),
         url: payload.playlist.openUrl,
       })
-      window.open(payload.playlist.openUrl, '_blank', 'noopener,noreferrer')
     } catch (error) {
       setPlaylistStatus({
         type: 'error',

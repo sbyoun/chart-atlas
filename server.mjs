@@ -25,6 +25,13 @@ let activePlaylistSessionId = '';
 let cachedSpotifyUserId = '';
 let cachedSpotifyClientCredentials = { accessToken: '', expiresAt: 0 };
 let playlistCache = { data: null, expiresAt: 0 };
+// Spotify can report tracks.total = 0 for a few minutes right after playlist
+// creation; remember what we just inserted so the studio list stays truthful.
+const recentPlaylistTrackCounts = new Map();
+const RECENT_PLAYLIST_TRACK_COUNT_TTL = 10 * 60_000;
+// Only playlists created by Chart Atlas features belong in the public studio
+// list; the account also holds unrelated personal playlists.
+const CHART_ATLAS_PLAYLIST_PREFIXES = ['Chart Atlas', 'Genre Atlas'];
 let crawlerSummaryCache = { key: '', html: '' };
 const artistMetadataCache = new Map();
 const externalArtistMetadataCache = new Map();
@@ -282,6 +289,28 @@ async function getSpotifyUserId() {
   return cachedSpotifyUserId;
 }
 
+function isChartAtlasPlaylistName(name) {
+  const normalized = String(name || '').trim();
+  return CHART_ATLAS_PLAYLIST_PREFIXES.some((prefix) => normalized.startsWith(prefix));
+}
+
+function rememberPlaylistTrackCount(playlistId, count) {
+  recentPlaylistTrackCounts.set(playlistId, {
+    count,
+    expiresAt: Date.now() + RECENT_PLAYLIST_TRACK_COUNT_TTL,
+  });
+}
+
+function resolvePlaylistTracksTotal(playlist) {
+  const reported = playlist.items?.total || playlist.tracks?.total || 0;
+  if (reported > 0) {
+    return reported;
+  }
+
+  const recent = recentPlaylistTrackCounts.get(playlist.id);
+  return recent && recent.expiresAt > Date.now() ? recent.count : reported;
+}
+
 async function fetchMyPublicPlaylists(force = false) {
   if (!force && playlistCache.data && Date.now() < playlistCache.expiresAt) {
     return playlistCache.data;
@@ -303,12 +332,17 @@ async function fetchMyPublicPlaylists(force = false) {
   }
 
   const playlists = all
-    .filter((playlist) => playlist?.owner?.id === userId && playlist.public === true)
+    .filter(
+      (playlist) =>
+        playlist?.owner?.id === userId &&
+        playlist.public === true &&
+        isChartAtlasPlaylistName(playlist.name),
+    )
     .map((playlist) => ({
       id: playlist.id,
       name: playlist.name,
       description: playlist.description || '',
-      tracksTotal: playlist.items?.total || playlist.tracks?.total || 0,
+      tracksTotal: resolvePlaylistTracksTotal(playlist),
       imageUrl: playlist.images?.[0]?.url || null,
       openUrl:
         playlist.external_urls?.spotify || `https://open.spotify.com/playlist/${playlist.id}`,
@@ -1696,7 +1730,66 @@ async function fetchTasteTrackProfiles(tracks) {
   );
 }
 
+async function findOwnedPlaylistByName(name) {
+  const userId = await getSpotifyUserId();
+  let nextPath = '/me/playlists?limit=50';
+
+  while (nextPath) {
+    const payload = await spotifyRequest(nextPath);
+    const match = (payload.items || []).find(
+      (playlist) => playlist?.owner?.id === userId && playlist?.name === name,
+    );
+
+    if (match) {
+      return match;
+    }
+
+    nextPath = payload.next ? payload.next.replace('https://api.spotify.com/v1', '') : null;
+  }
+
+  return null;
+}
+
 async function createPlaylistFromTracks({ name, description, trackUris, isPublic }) {
+  // Pressing the same create button twice should refresh the existing playlist
+  // instead of stacking same-name duplicates on the account.
+  const existing = await findOwnedPlaylistByName(name).catch(() => null);
+
+  if (existing) {
+    await spotifyRequest(`/playlists/${existing.id}/items`, {
+      method: 'PUT',
+      body: { uris: trackUris.slice(0, 100) },
+    });
+
+    for (let index = 100; index < trackUris.length; index += 100) {
+      await spotifyRequest(`/playlists/${existing.id}/items`, {
+        method: 'POST',
+        body: { uris: trackUris.slice(index, index + 100) },
+      });
+    }
+
+    if (description && description !== existing.description) {
+      await spotifyRequest(`/playlists/${existing.id}`, {
+        method: 'PUT',
+        body: { description },
+      }).catch(() => {});
+    }
+
+    rememberPlaylistTrackCount(existing.id, trackUris.length);
+    playlistCache = { data: null, expiresAt: 0 };
+
+    return {
+      id: existing.id,
+      name: existing.name,
+      description: description || existing.description || '',
+      tracksTotal: trackUris.length,
+      reused: true,
+      openUrl:
+        existing.external_urls?.spotify || `https://open.spotify.com/playlist/${existing.id}`,
+      embedUrl: `https://open.spotify.com/embed/playlist/${existing.id}?utm_source=generator`,
+    };
+  }
+
   const playlist = await spotifyRequest('/me/playlists', {
     method: 'POST',
     body: {
@@ -1720,6 +1813,7 @@ async function createPlaylistFromTracks({ name, description, trackUris, isPublic
     throw error;
   }
 
+  rememberPlaylistTrackCount(playlist.id, trackUris.length);
   playlistCache = { data: null, expiresAt: 0 };
 
   return {
