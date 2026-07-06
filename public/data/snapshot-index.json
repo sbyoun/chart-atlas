@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "latestDate": "2026-07-04",
+  "snapshots": [
+    {
+      "date": "2026-07-04",
+      "file": "/data/snapshots/2026-07-04.json",
+      "sourceName": "Kworb Spotify Daily",
+      "generatedAt": "2026-07-06T04:10:12.080Z",
+      "countries": 35,
+      "tracks": 1219,
+      "analysisFile": "/data/analysis/2026-07-04.json"
+    },
+    {
+      "date": "2026-06-27",
+      "file": "/data/snapshots/2026-06-27.json",
+      "sourceName": "Kworb Spotify Daily",
+      "generatedAt": "2026-06-29T04:10:11.366Z",
+      "countries": 35,
+      "tracks": 1204,
+      "analysisFile": "/data/analysis/2026-06-27.json"
+    },
+    {
+      "date": "2026-06-20",
+      "file": "/data/snapshots/2026-06-20.json",
+      "sourceName": "Kworb Spotify Daily",
+      "generatedAt": "2026-06-22T04:10:11.814Z",
+      "countries": 35,
+      "tracks": 1202,
+      "analysisFile": "/data/analysis/2026-06-20.json"
+    },
+    {
+      "date": "2026-06-13",
+      "file": "/data/snapshots/2026-06-13.json",
+      "sourceName": "Kworb Spotify Daily",
+      "generatedAt": "2026-06-15T04:10:11.548Z",
+      "countries": 35,
+      "tracks": 1147,
+      "analysisFile": "/data/analysis/2026-06-13.json"
+    },
+    {
+      "date": "2026-06-06",
+      "file": "/data/snapshots/2026-06-06.json",
+      "sourceName": "Kworb Spotify Daily",
+      "generatedAt": "2026-06-08T04:10:11.948Z",
+      "countries": 35,
+      "tracks": 1175,
+      "analysisFile": "/data/analysis/2026-06-06.json"
+    },
+    {
+      "date": "2026-05-30",
+      "file": "/data/snapshots/2026-05-30.json",
+      "sourceName": "Kworb Spotify Daily",
+      "generatedAt": "2026-06-01T04:10:11.148Z",
+      "countries": 35,
+      "tracks": 1156,
+      "analysisFile": "/data/analysis/2026-05-30.json"
+    },
+    {
+      "date": "2026-05-26",
+      "file": "/data/snapshots/2026-05-26.json",
+      "sourceName": "Kworb Spotify Daily",
+      "generatedAt": "2026-05-28T04:10:11.449Z",
+      "countries": 35,
+      "tracks": 1138,
+      "analysisFile": "/data/analysis/2026-05-26.json"
+    },
+    {
+      "date": "2026-05-25",
+      "file": "/data/snapshots/2026-05-25.json",
+      "sourceName": "Kworb Spotify Daily",
+      "generatedAt": "2026-05-27T09:20:11.178Z",
+      "countries": 35,
+      "tracks": 1146,
+      "analysisFile": "/data/analysis/2026-05-25.json"
+    }
+  ]
+}

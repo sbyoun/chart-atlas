@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Chart Atlas is a music discovery lab for exploring country charts, regional genre signals, rising artists, taste discovery, and playlist tools."
+    />
+    <meta name="robots" content="index, follow" />
+    <meta name="google-adsense-account" content="ca-pub-1642219896856384" />
+    <link rel="canonical" href="https://foldalpha.com/" />
+    <meta property="og:title" content="Chart Atlas" />
+    <meta
+      property="og:description"
+      content="Explore country music charts, regional genre signals, rising artists, and taste discovery tools."
+    />
+    <meta property="og:url" content="https://foldalpha.com/" />
+    <meta property="og:type" content="website" />
+    <title>Chart Atlas</title>
+    <script>
+      ;(() => {
+        try {
+          const theme = window.localStorage.getItem('chart-atlas-theme')
+          document.documentElement.dataset.theme = theme === 'dark' ? 'dark' : 'light'
+        } catch {
+          document.documentElement.dataset.theme = 'light'
+        }
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root">
+      <main>
+        <h1>Chart Atlas</h1>
+        <p>
+          Chart Atlas is a music discovery lab for exploring country charts, regional genre
+          signals, rising artists, taste discovery, and playlist tools.
+        </p>
+        <nav aria-label="Site information">
+          <a href="/about">About</a>
+          <a href="/privacy">Privacy Policy</a>
+          <a href="/contact">Contact</a>
+          <a href="/terms">Terms</a>
+          <a href="/methodology">Methodology</a>
+        </nav>
+        <section>
+          <h2>About Chart Atlas</h2>
+          <p>
+            The service provides chart maps, genre discovery, rising discovery, taste discovery,
+            and public playlist tools for music research and exploration.
+          </p>
+        </section>
+        <section>
+          <h2>Privacy Policy</h2>
+          <p>
+            Chart Atlas processes chart data, music metadata, selected UI state, playlist requests,
+            service logs, and advertising data only as needed to operate and improve the service.
+          </p>
+        </section>
+        <section>
+          <h2>Data and Methodology</h2>
+          <p>
+            Chart Atlas compares weekly chart snapshots across countries, then derives country
+            rankings, genre discovery signals, rising artist movement, and taste sampler
+            recommendations from chart positions, appearance counts, and external music metadata.
+          </p>
+        </section>
+        <!-- chart-atlas-crawler-summary:start -->
+        <section id="crawler-chart-summary" data-crawler-summary>
+          <h2>Latest chart snapshot</h2>
+          <p>
+            The latest country chart summary is loaded from Chart Atlas snapshot data. If JavaScript
+            is unavailable, the production server injects the current snapshot date, coverage, and
+            country #1 song summaries into this section.
+          </p>
+        </section>
+        <!-- chart-atlas-crawler-summary:end -->
+        <section>
+          <h2>Contact</h2>
+          <p>
+            Questions, privacy requests, advertising questions, and data feedback can be sent to
+            <a href="mailto:team@foldalpha.com">team@foldalpha.com</a>.
+          </p>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

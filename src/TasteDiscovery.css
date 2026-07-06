@@ -1,0 +1,886 @@
+.taste-page {
+  min-height: calc(100vh - 76px);
+  padding: 22px 24px 28px;
+  color: #162033;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(20, 184, 166, 0.18), transparent 30%),
+    radial-gradient(circle at 86% 10%, rgba(251, 113, 133, 0.16), transparent 28%),
+    linear-gradient(135deg, #f5fbff 0%, #fff7ed 50%, #f8fafc 100%);
+}
+
+.taste-loading {
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  color: #64748b;
+  font-weight: 850;
+  text-align: center;
+}
+
+.taste-loading svg {
+  animation: taste-spin 900ms linear infinite;
+}
+
+.taste-hero,
+.taste-stage,
+.taste-result,
+.taste-progress {
+  max-width: 1680px;
+  margin-inline: auto;
+}
+
+.taste-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 22px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.66)),
+    linear-gradient(135deg, rgba(20, 184, 166, 0.1), rgba(251, 113, 133, 0.1));
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.taste-kicker,
+.taste-controls,
+.taste-controls label,
+.taste-reset,
+.taste-actions,
+.taste-actions button,
+.taste-source-link,
+.taste-result-row,
+.taste-playlist-box,
+.taste-playlist-box button {
+  display: flex;
+  align-items: center;
+}
+
+.taste-kicker {
+  width: fit-content;
+  gap: 7px;
+  margin-bottom: 8px;
+  padding: 6px 9px;
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  border-radius: 999px;
+  color: #0f766e;
+  background: rgba(240, 253, 250, 0.82);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.taste-hero h2 {
+  margin: 0;
+  color: #111827;
+  font-size: clamp(34px, 5vw, 64px);
+  line-height: 0.93;
+  letter-spacing: -0.06em;
+}
+
+.taste-hero p {
+  max-width: 760px;
+  margin: 12px 0 0;
+  color: #475569;
+  font-size: 15px;
+  font-weight: 680;
+  line-height: 1.55;
+}
+
+.taste-controls {
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.taste-controls label {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 5px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.taste-controls select,
+.taste-reset {
+  min-height: 40px;
+  border: 1px solid #d8e0ea;
+  border-radius: 12px;
+  color: #111827;
+  background: #ffffff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 820;
+}
+
+.taste-controls select {
+  min-width: 190px;
+  padding: 0 12px;
+}
+
+.taste-reset {
+  justify-content: center;
+  gap: 7px;
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.taste-progress {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+  margin-bottom: 14px;
+}
+
+.taste-progress > div {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.22);
+}
+
+.taste-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #0f766e, #fb7185);
+  transition: width 220ms ease;
+}
+
+.taste-progress p {
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.taste-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  max-width: min(100%, 1180px);
+}
+
+.taste-card,
+.taste-result-card,
+.taste-result-panel,
+.taste-playlist-box {
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 20px 52px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.taste-card {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.92fr) minmax(0, 1.08fr);
+  min-height: 680px;
+  overflow: hidden;
+  border-radius: 26px;
+}
+
+.taste-cover {
+  position: relative;
+  display: grid;
+  min-height: 100%;
+  place-items: center;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 26% 20%, rgba(255, 255, 255, 0.4), transparent 30%),
+    linear-gradient(135deg, var(--genre-color, #0f766e), #111827);
+}
+
+.taste-cover::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  content: '';
+  background:
+    linear-gradient(180deg, transparent 42%, rgba(15, 23, 42, 0.62)),
+    radial-gradient(circle at 80% 16%, rgba(255, 255, 255, 0.22), transparent 28%);
+}
+
+.taste-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.025);
+}
+
+.taste-cover > span {
+  color: rgba(255, 255, 255, 0.84);
+  font-size: clamp(64px, 10vw, 130px);
+  font-weight: 950;
+  letter-spacing: -0.08em;
+}
+
+.taste-cover-badge {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 2;
+  max-width: calc(100% - 36px);
+  padding: 8px 11px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 999px;
+  color: #ffffff;
+  background: rgba(17, 24, 39, 0.72);
+  font-size: 13px;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  backdrop-filter: blur(10px);
+}
+
+.taste-card-body {
+  display: grid;
+  align-content: center;
+  gap: 14px;
+  padding: clamp(18px, 3vw, 34px);
+}
+
+.taste-genre-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.taste-genre-row small {
+  color: #64748b;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.taste-card h3 {
+  margin: 0;
+  color: #111827;
+  font-size: clamp(34px, 4.5vw, 62px);
+  line-height: 0.95;
+  letter-spacing: -0.065em;
+}
+
+.taste-card-body > p {
+  margin: -6px 0 0;
+  color: #475569;
+  font-size: 18px;
+  font-weight: 760;
+}
+
+.taste-context,
+.taste-tags {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.taste-context span,
+.taste-tags span {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding: 0 9px;
+  border: 1px solid #d8e0ea;
+  border-radius: 999px;
+  color: #334155;
+  background: #ffffff;
+  font-size: 12px;
+  font-weight: 820;
+}
+
+.taste-player {
+  overflow: hidden;
+  border: 1px solid #d8e0ea;
+  border-radius: 16px;
+  background: #f8fafc;
+}
+
+.taste-player audio {
+  display: block;
+  width: 100%;
+  min-height: 54px;
+}
+
+.taste-player-loading,
+.taste-autoplay-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 12px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 780;
+  line-height: 1.4;
+}
+
+.taste-player-loading {
+  justify-content: center;
+  min-height: 92px;
+  font-weight: 850;
+  text-align: center;
+}
+
+.taste-player-loading svg {
+  flex: 0 0 auto;
+  animation: taste-spin 900ms linear infinite;
+}
+
+.taste-autoplay-note span {
+  flex: 1;
+  min-width: 0;
+}
+
+.taste-autoplay-note button {
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid #0f766e;
+  border-radius: 999px;
+  color: #ffffff;
+  background: #0f766e;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.taste-player iframe {
+  display: block;
+  width: 100%;
+  height: 152px;
+  border: 0;
+}
+
+.taste-no-preview {
+  display: grid;
+  min-height: 92px;
+  place-items: center;
+  padding: 16px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.taste-actions {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 10px;
+}
+
+.taste-actions button {
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  border: 0;
+  border-radius: 16px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.taste-actions .like {
+  color: #ffffff;
+  background: #e11d48;
+}
+
+.taste-actions .dislike {
+  color: #ffffff;
+  background: #111827;
+}
+
+.taste-actions .skip {
+  min-width: 112px;
+  color: #475569;
+  background: #e2e8f0;
+}
+
+.taste-source-link {
+  width: fit-content;
+  gap: 6px;
+  color: #0f766e;
+  font-size: 13px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.taste-result-row > span {
+  flex: 0 0 9px;
+  width: 9px;
+  height: 38px;
+  border-radius: 999px;
+}
+
+.taste-result-row div {
+  min-width: 0;
+  flex: 1;
+}
+
+.taste-result-row b {
+  display: block;
+  overflow: hidden;
+  color: #111827;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.taste-result-row small {
+  display: block;
+  overflow: hidden;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 790;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.taste-result {
+  display: grid;
+  gap: 16px;
+}
+
+.taste-result-card {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 34px 24px;
+  border-radius: 26px;
+  text-align: center;
+}
+
+.taste-result-card svg {
+  color: #f59e0b;
+}
+
+.taste-result-card-rich {
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 0.42fr);
+  align-items: center;
+  justify-items: stretch;
+  gap: clamp(18px, 4vw, 46px);
+  padding: clamp(22px, 4vw, 42px);
+  overflow: hidden;
+  text-align: left;
+}
+
+.taste-result-copy {
+  display: grid;
+  gap: 12px;
+}
+
+.taste-result-card > span {
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.taste-result-copy > span {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 7px;
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.taste-result-card h3 {
+  max-width: 860px;
+  margin: 0;
+  color: #111827;
+  font-size: clamp(30px, 4vw, 54px);
+  line-height: 1;
+  letter-spacing: -0.055em;
+}
+
+.taste-result-card p,
+.taste-result-panel p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 760;
+  line-height: 1.55;
+}
+
+.taste-result-card-rich p {
+  max-width: 780px;
+  font-size: 15px;
+}
+
+.taste-result-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.taste-result-chips small {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  border-radius: 999px;
+  color: #0f766e;
+  background: rgba(240, 253, 250, 0.82);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.taste-result-art {
+  position: relative;
+  display: grid;
+  min-height: 320px;
+  place-items: center;
+  isolation: isolate;
+}
+
+.taste-result-art::before {
+  position: absolute;
+  inset: 18% 4% 6% 16%;
+  z-index: -1;
+  border-radius: 999px;
+  content: '';
+  background: radial-gradient(circle, rgba(251, 113, 133, 0.28), rgba(20, 184, 166, 0.18), transparent 70%);
+  filter: blur(6px);
+}
+
+.taste-result-art img,
+.taste-result-art div {
+  position: absolute;
+  width: clamp(112px, 13vw, 178px);
+  aspect-ratio: 1;
+  border: 7px solid rgba(255, 255, 255, 0.82);
+  border-radius: 28px;
+  object-fit: cover;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18);
+}
+
+.taste-result-art img:nth-child(1),
+.taste-result-art div:nth-child(1) {
+  z-index: 4;
+  transform: translate(-42px, -34px) rotate(-8deg);
+}
+
+.taste-result-art img:nth-child(2),
+.taste-result-art div:nth-child(2) {
+  z-index: 5;
+  transform: translate(42px, 4px) rotate(7deg);
+}
+
+.taste-result-art img:nth-child(3),
+.taste-result-art div:nth-child(3) {
+  z-index: 3;
+  transform: translate(-10px, 72px) rotate(-2deg);
+}
+
+.taste-result-art img:nth-child(4) {
+  z-index: 2;
+  transform: translate(96px, -82px) rotate(13deg);
+}
+
+.taste-result-art img:nth-child(5) {
+  z-index: 1;
+  transform: translate(-112px, 66px) rotate(-14deg);
+}
+
+.taste-result-art div {
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0f766e, #fb7185);
+  font-size: 28px;
+  font-weight: 950;
+  letter-spacing: -0.08em;
+}
+
+.taste-result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.taste-result-panel {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  padding: 18px;
+  border-radius: 22px;
+}
+
+.taste-result-panel h3 {
+  margin: 0 0 3px;
+  color: #111827;
+  font-size: 18px;
+}
+
+.taste-result-row {
+  gap: 10px;
+  min-height: 48px;
+  padding: 9px;
+  border: 1px solid #e5ebf2;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.taste-result-row > strong {
+  display: grid;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 999px;
+  color: #111827;
+  background: #f1f5f9;
+  font-size: 12px;
+}
+
+.taste-playlist-box {
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 22px;
+  flex-wrap: wrap;
+}
+
+.taste-playlist-box > span {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.taste-playlist-box > span.success a {
+  color: #0f766e;
+}
+
+.taste-playlist-box > span.error {
+  color: #b91c1c;
+}
+
+.taste-playlist-box button {
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid #111827;
+  border-radius: 12px;
+  color: #ffffff;
+  background: #111827;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.taste-playlist-box button.secondary {
+  border-color: #d8e0ea;
+  color: #111827;
+  background: #ffffff;
+}
+
+.taste-playlist-box button:disabled {
+  cursor: progress;
+  opacity: 0.66;
+}
+
+.taste-playlist-box button:disabled svg {
+  animation: taste-spin 900ms linear infinite;
+}
+
+@keyframes taste-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 1180px) {
+  .taste-stage {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 820px) {
+  .taste-page {
+    padding: 14px;
+  }
+
+  .taste-hero {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .taste-controls,
+  .taste-controls label,
+  .taste-controls select,
+  .taste-reset {
+    width: 100%;
+  }
+
+  .taste-card {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .taste-cover {
+    min-height: 320px;
+  }
+
+  .taste-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .taste-actions .skip {
+    min-width: 0;
+  }
+
+  .taste-autoplay-note {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .taste-result-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .taste-result-card-rich {
+    grid-template-columns: 1fr;
+  }
+
+  .taste-result-art {
+    min-height: 240px;
+  }
+
+  .taste-result-art img,
+  .taste-result-art div {
+    width: clamp(96px, 34vw, 136px);
+    border-radius: 22px;
+  }
+
+  .taste-playlist-box {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+html[data-theme='dark'] .taste-page {
+  color: #dbeafe;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(20, 184, 166, 0.14), transparent 30%),
+    radial-gradient(circle at 86% 10%, rgba(251, 113, 133, 0.12), transparent 28%),
+    linear-gradient(135deg, #07111f 0%, #0b1220 52%, #0f172a 100%);
+}
+
+html[data-theme='dark'] .taste-loading,
+html[data-theme='dark'] .taste-hero p,
+html[data-theme='dark'] .taste-controls label,
+html[data-theme='dark'] .taste-progress p,
+html[data-theme='dark'] .taste-genre-row small,
+html[data-theme='dark'] .taste-card-body > p,
+html[data-theme='dark'] .taste-no-preview,
+html[data-theme='dark'] .taste-player-loading,
+html[data-theme='dark'] .taste-autoplay-note,
+html[data-theme='dark'] .taste-result-row small,
+html[data-theme='dark'] .taste-result-card p,
+html[data-theme='dark'] .taste-result-panel p,
+html[data-theme='dark'] .taste-playlist-box > span {
+  color: #94a3b8;
+}
+
+html[data-theme='dark'] .taste-hero,
+html[data-theme='dark'] .taste-card,
+html[data-theme='dark'] .taste-result-card,
+html[data-theme='dark'] .taste-result-panel,
+html[data-theme='dark'] .taste-playlist-box {
+  border-color: #1e293b;
+  background: rgba(15, 23, 42, 0.9);
+  box-shadow: 0 24px 58px rgba(0, 0, 0, 0.3);
+}
+
+html[data-theme='dark'] .taste-kicker {
+  border-color: rgba(94, 234, 212, 0.22);
+  color: #5eead4;
+  background: rgba(20, 184, 166, 0.12);
+}
+
+html[data-theme='dark'] .taste-hero h2,
+html[data-theme='dark'] .taste-card h3,
+html[data-theme='dark'] .taste-result-card h3,
+html[data-theme='dark'] .taste-result-panel h3,
+html[data-theme='dark'] .taste-result-row b {
+  color: #f8fafc;
+}
+
+html[data-theme='dark'] .taste-controls select,
+html[data-theme='dark'] .taste-reset,
+html[data-theme='dark'] .taste-context span,
+html[data-theme='dark'] .taste-tags span,
+html[data-theme='dark'] .taste-player,
+html[data-theme='dark'] .taste-result-row,
+html[data-theme='dark'] .taste-playlist-box button.secondary {
+  border-color: #263449;
+  color: #cbd5e1;
+  background: #111827;
+}
+
+html[data-theme='dark'] .taste-genre-row,
+html[data-theme='dark'] .taste-source-link,
+html[data-theme='dark'] .taste-result-card > span,
+html[data-theme='dark'] .taste-result-copy > span,
+html[data-theme='dark'] .taste-playlist-box > span.success a {
+  color: #5eead4;
+}
+
+html[data-theme='dark'] .taste-result-chips small {
+  border-color: rgba(94, 234, 212, 0.22);
+  color: #5eead4;
+  background: rgba(20, 184, 166, 0.12);
+}
+
+html[data-theme='dark'] .taste-result-art img,
+html[data-theme='dark'] .taste-result-art div {
+  border-color: rgba(15, 23, 42, 0.82);
+  box-shadow: 0 20px 46px rgba(0, 0, 0, 0.36);
+}
+
+html[data-theme='dark'] .taste-actions .skip {
+  color: #cbd5e1;
+  background: #1e293b;
+}
+
+html[data-theme='dark'] .taste-autoplay-note button {
+  border-color: #5eead4;
+  color: #042f2e;
+  background: #5eead4;
+}
+
+html[data-theme='dark'] .taste-result-row > strong {
+  color: #f8fafc;
+  background: #1e293b;
+}
+
+html[data-theme='dark'] .taste-playlist-box button {
+  border-color: #f8fafc;
+  color: #0b1220;
+  background: #f8fafc;
+}
+
+html[data-theme='dark'] .taste-playlist-box > span.error {
+  color: #fca5a5;
+}

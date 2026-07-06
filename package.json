@@ -1,0 +1,42 @@
+{
+  "name": "chart-atlas",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.mjs",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "collect:itunes": "node scripts/collect-itunes-rss.mjs",
+    "collect:spotify": "node scripts/collect-kworb-spotify.mjs && npm run precompute:analysis && npm run precompute:genres",
+    "precompute:analysis": "node scripts/precompute-chart-analysis.mjs",
+    "precompute:analysis:all": "CHART_ANALYSIS_ALL=1 node scripts/precompute-chart-analysis.mjs",
+    "precompute:genres": "TRACK_METADATA_LOOKUP_LIMIT=1200 GENRE_TRACK_CANDIDATE_LIMIT=1200 node scripts/precompute-genre-discovery.mjs",
+    "precompute:genres:all": "TRACK_METADATA_LOOKUP_LIMIT=1200 GENRE_TRACK_CANDIDATE_LIMIT=1200 node scripts/precompute-all-genre-discovery.mjs",
+    "preview": "NODE_ENV=production node server.mjs"
+  },
+  "dependencies": {
+    "d3-geo": "^3.1.1",
+    "lucide-react": "^1.16.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/d3-geo": "^3.1.0",
+    "@types/node": "^24.12.3",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@types/topojson-client": "^3.1.5",
+    "@vitejs/plugin-react": "^6.0.1",
+    "eslint": "^10.3.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.6.0",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "^8.59.2",
+    "vite": "^8.0.12"
+  }
+}

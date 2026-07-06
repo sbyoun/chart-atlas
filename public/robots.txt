@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Allow: /about
+Allow: /privacy
+Allow: /contact
+Allow: /terms
+Allow: /methodology
+Allow: /projects
+Allow: /financial-llm-terminal
+Allow: /music-atlas
+Allow: /data/
+Disallow: /api/
+
+Sitemap: https://foldalpha.com/sitemap.xml

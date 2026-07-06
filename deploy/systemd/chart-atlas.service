@@ -1,0 +1,23 @@
+[Unit]
+Description=Chart Atlas music map app
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/chart-atlas
+Environment=NODE_ENV=production
+Environment=APP_BASE_PATH=/
+Environment=HOST=127.0.0.1
+Environment=PORT=5175
+Environment=SPOTIFY_CONFIG_PATH=/home/ubuntu/spotify-mcp-server/spotify-config.json
+Environment=CODEX_BIN=/home/ubuntu/.npm-global/bin/codex
+Environment=CODEX_EXTRA_ARGS=--dangerously-bypass-approvals-and-sandbox
+Environment=PLAYLIST_SESSIONS_PATH=/home/ubuntu/chart-atlas/data/playlist-chat-sessions.json
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/usr/bin/node server.mjs
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
