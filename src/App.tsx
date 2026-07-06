@@ -5,6 +5,7 @@ import {
   Crown,
   Globe2,
   Heart,
+  Loader2,
   MapPin,
   Moon,
   Music2,
@@ -737,6 +738,7 @@ function App() {
   const [snapshotIndex, setSnapshotIndex] = useState<SnapshotIndexEntry[]>([])
   const [selectedDate, setSelectedDate] = useState(demoSnapshot.snapshotDate)
   const [snapshotLoading, setSnapshotLoading] = useState(true)
+  const [snapshotFetchFailed, setSnapshotFetchFailed] = useState(false)
   const [previousSnapshot, setPreviousSnapshot] = useState<ChartSnapshotData | null>(null)
   const [previousSnapshotLoading, setPreviousSnapshotLoading] = useState(false)
   const [snapshotHistory, setSnapshotHistory] = useState<ChartSnapshotData[]>([])
@@ -802,9 +804,29 @@ function App() {
         if (indexResponse.ok) {
           const indexPayload: unknown = await indexResponse.json()
 
-          if (!ignore && isSnapshotIndexData(indexPayload) && indexPayload.snapshots.length > 0) {
-            setSnapshotIndex(indexPayload.snapshots)
-            setSelectedDate(indexPayload.latestDate || indexPayload.snapshots[0].date)
+          if (isSnapshotIndexData(indexPayload) && indexPayload.snapshots.length > 0) {
+            const latestDate = indexPayload.latestDate || indexPayload.snapshots[0].date
+            const latestEntry =
+              indexPayload.snapshots.find((item) => item.date === latestDate) ||
+              indexPayload.snapshots[0]
+            // Load the latest snapshot before the first paint so visitors never see
+            // the bundled demo dataset flash in as if it were real chart data.
+            const snapshotResponse = await fetch(`${appUrl(latestEntry.file)}?v=${Date.now()}`)
+            const snapshotPayload: unknown = snapshotResponse.ok
+              ? await snapshotResponse.json()
+              : null
+
+            if (!ignore) {
+              setSnapshotIndex(indexPayload.snapshots)
+
+              if (snapshotPayload && isChartSnapshotData(snapshotPayload)) {
+                setSnapshot(snapshotPayload)
+                setSelectedDate(snapshotPayload.snapshotDate)
+              } else {
+                // The selected-date effect retries the snapshot fetch.
+                setSelectedDate(latestEntry.date)
+              }
+            }
             return
           }
         }
@@ -827,10 +849,18 @@ function App() {
                 tracks: payload.tracks.length,
               },
             ])
+            return
           }
         }
+
+        if (!ignore) {
+          // The checked-in demo snapshot is the fallback when no collected data exists.
+          setSnapshotFetchFailed(true)
+        }
       } catch {
-        // The checked-in demo snapshot is the fallback when no collected data exists.
+        if (!ignore) {
+          setSnapshotFetchFailed(true)
+        }
       } finally {
         if (!ignore) {
           setSnapshotLoading(false)
@@ -873,6 +903,10 @@ function App() {
 
         if (!ignore && isChartSnapshotData(payload)) {
           setSnapshot(payload)
+        }
+      } catch {
+        if (!ignore) {
+          setSnapshotFetchFailed(true)
         }
       } finally {
         if (!ignore) {
@@ -1029,6 +1063,9 @@ function App() {
   }, [snapshotIndex])
 
   const model = useMemo(() => buildModel(snapshot), [snapshot])
+  // While the real snapshot is on its way, keep the demo dataset off screen; it
+  // is only shown once every fetch path has failed.
+  const initialDataPending = snapshot === demoSnapshot && !snapshotFetchFailed
   const {
     countries,
     chartByCountry,
@@ -1347,7 +1384,12 @@ function App() {
       </header>
 
       <div className={`app-content app-content-${mainTab}`}>
-      {mainTab === 'genres' ? (
+      {initialDataPending && (mainTab === 'atlas' || mainTab === 'genres' || mainTab === 'taste') ? (
+        <section className="app-data-loading" role="status">
+          <Loader2 size={22} />
+          {pick(locale, 'Loading the latest chart snapshot.', '최신 차트 스냅샷을 불러오는 중입니다.')}
+        </section>
+      ) : mainTab === 'genres' ? (
         <GenreDiscovery
           snapshot={snapshot}
           snapshotIndex={snapshotIndex}
@@ -1404,6 +1446,19 @@ function App() {
             <span>
               <Crown size={15} />
               {topTrack.track.title} · {topTrack.track.artist}
+            </span>
+            <span className="status-insight">
+              {topTrack.topOnes > 0
+                ? pick(
+                    locale,
+                    `#1 in ${topTrack.topOnes} ${topTrack.topOnes === 1 ? 'country' : 'countries'} · charting in ${topTrack.appearances}`,
+                    `${topTrack.topOnes}개국 1위 · ${topTrack.appearances}개국 차트인`,
+                  )
+                : pick(
+                    locale,
+                    `#1 nowhere, yet charting in ${topTrack.appearances} countries — the most evenly loved song this week`,
+                    `0개국 1위, 그러나 ${topTrack.appearances}개국 차트인 — 이번 주 가장 고르게 사랑받는 곡`,
+                  )}
             </span>
             {snapshotLoading ? <span>{pick(locale, 'Loading data', '데이터 로딩 중')}</span> : null}
           </section>

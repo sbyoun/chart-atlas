@@ -192,6 +192,30 @@ button {
   min-height: 0;
 }
 
+.app-data-loading {
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  min-height: 320px;
+  color: #64748b;
+  font-weight: 850;
+  text-align: center;
+}
+
+.app-data-loading svg {
+  animation: app-data-spin 900ms linear infinite;
+}
+
+@keyframes app-data-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+html[data-theme='dark'] .app-data-loading {
+  color: #94a3b8;
+}
+
 .app-content-playlists {
   overflow: hidden;
 }
