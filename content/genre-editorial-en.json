@@ -1,0 +1,182 @@
+{
+  "hip-hop-rap": {
+    "summary": "One of the strongest mainstream genre families on current global streaming charts.",
+    "whyLocal": "Hip-hop works as a baseline for local genre discovery because many countries place their own local rap scenes near the top of their charts."
+  },
+  "pop": {
+    "summary": "The global pop genre that anchors most country-level charts.",
+    "whyLocal": "Measuring the relative presence of local genres requires comparing them against a large reference genre like pop inside the same ranking."
+  },
+  "k-pop": {
+    "summary": "A global genre built on the Korean idol and pop industry that regularly enters charts worldwide.",
+    "whyLocal": "K-pop is a domestic genre in South Korea but an imported one almost everywhere else, which makes it a useful lens for regional spread."
+  },
+  "r-and-b": {
+    "summary": "A vocal-led mainstream genre with global reach.",
+    "whyLocal": "R&B overlaps heavily with hip-hop and pop, so treating it as its own axis makes chart-based genre comparison more informative."
+  },
+  "dance-electronic": {
+    "summary": "A global electronic music family rooted in club and festival culture.",
+    "whyLocal": "On country charts it often blends into pop, but it remains the reference genre for tracking regional club sounds."
+  },
+  "rock-alternative": {
+    "summary": "The band-driven rock and alternative genre family.",
+    "whyLocal": "Japan, Europe, and the United States each feed distinct local band scenes into their charts, so rock reads differently by market."
+  },
+  "country": {
+    "summary": "Country and country-pop, a genre with outsized streaming chart influence in North America.",
+    "whyLocal": "It dominates in the United States chart while looking strongly local from every other region, which makes the contrast easy to measure."
+  },
+  "reggaeton-latin-urbano": {
+    "summary": "The core urban music family of Latin American and Spanish-language charts.",
+    "whyLocal": "It is global and hyper-local at the same time: many countries chart their own variants, which makes chart-based comparison valuable."
+  },
+  "latin-pop-musica-latina": {
+    "summary": "A chart-leading family covering Spanish-language pop, urbano, and tropical music.",
+    "whyLocal": "Global service metadata often groups tracks as Música Latina before they split into subgenres like reggaeton or corridos."
+  },
+  "corridos-tumbados-musica-mexicana": {
+    "summary": "Música Mexicana built on the corridos tradition fused with trap and hip-hop sensibilities and a young streaming audience.",
+    "whyLocal": "It holds top chart positions in Mexico and the US Latin market, with instrumentation, vocal tone, and regional identity distinct from global pop or Latin urbano."
+  },
+  "salsa-tropical": {
+    "summary": "The tropical family covering salsa, cumbia, merengue, and other Latin dance and party music.",
+    "whyLocal": "Long-standing regional dance genres keep re-entering Latin charts through new songs and remakes, but they hide easily inside urbano-heavy rankings."
+  },
+  "afrobeats-afropop": {
+    "summary": "The modern African pop family that spread to global charts from Nigeria outward.",
+    "whyLocal": "The genre is globalized, but country charts still show the concrete movement of each local scene."
+  },
+  "bollywood": {
+    "summary": "The vast popular music family centered on India's Hindi-language film industry.",
+    "whyLocal": "It is a core genre in South Asian and diaspora charts, yet global pop taxonomies tend to flatten it into generic film music."
+  },
+  "tamil-pop-kollywood": {
+    "summary": "The South Indian popular music axis combining Tamil film music and independent pop.",
+    "whyLocal": "It belongs to a different language and film industry than Hindi Bollywood, but global charts often merge both into a single Indian music label."
+  },
+  "opm": {
+    "summary": "OPM, the genre family covering Filipino popular music as a whole.",
+    "whyLocal": "Philippine charts are strong in local bands, ballads, and idol pop, but external services scatter these tracks into plain Pop or Rock."
+  },
+  "dangdut-koplo": {
+    "summary": "Indonesia's massive live-event dance genre, strong across regional events, TV, YouTube, and streaming.",
+    "whyLocal": "Its drum patterns, melodies, and Javanese and Indonesian sensibility differ from Western pop chart grammar, so recognition outside Indonesia stays low."
+  },
+  "mahraganat": {
+    "summary": "A raw, fast street-party music that emerged from urban Egypt.",
+    "whyLocal": "Local social context, club and wedding culture, and Arabic hooks give it an entry barrier that global pop does not have."
+  },
+  "arabic-pop": {
+    "summary": "The mainstream pop family of the Arabic-speaking world across Egypt, Lebanon, and the Gulf.",
+    "whyLocal": "When metadata arrives as broad Arabic labels rather than subgenres like Mahraganat, Khaliji, or Shilat, this genre acts as the necessary baseline."
+  },
+  "arabesque": {
+    "summary": "A Turkish popular genre blending melodramatic vocals with folk and Middle Eastern sensibilities.",
+    "whyLocal": "It shows up strongly in Turkish charts next to modern pop and rap, but global services tend to file it under generic Turkish pop."
+  },
+  "manele": {
+    "summary": "A Balkan-pop genre with mass popularity in Romania.",
+    "whyLocal": "It powers a huge wedding and party music market at home, but language barriers and taste debates keep it under-exposed abroad."
+  },
+  "chalga": {
+    "summary": "Bulgaria's pop-folk club music.",
+    "whyLocal": "Its Balkan rhythms and flashy club-pop aesthetic are rarely recognized as a distinct genre outside the country."
+  },
+  "disco-polo": {
+    "summary": "Poland's straightforward dance pop tied to weddings, festivals, and TV entertainment.",
+    "whyLocal": "It is a textbook local mega-genre: high recognition at home, near-zero coverage in global music media."
+  },
+  "barnmusik": {
+    "summary": "The children's and family music genre that appears repeatedly in Swedish charts.",
+    "whyLocal": "Family listening and kids' content consumption feed directly into the chart independently of general pop taste, so it deserves its own axis."
+  },
+  "levenslied-nederlandstalige-pop": {
+    "summary": "The local Dutch-language family of singalong pop, levenslied, and volkspop.",
+    "whyLocal": "It is emotionally close to German-language Schlager, but it moves through its own language market and star system in Dutch charts."
+  },
+  "luk-thung-mor-lam": {
+    "summary": "A country and regional folk-based genre family that is central to Thai popular music.",
+    "whyLocal": "Its Isan-region language feel, folk roots, and working-class sensibility differ from Bangkok-centric pop and sound unfamiliar to outside listeners."
+  },
+  "khaliji-pop": {
+    "summary": "The local pop and ballad-centered genre of the Gulf region.",
+    "whyLocal": "Powerful within the Arab world, yet global charts flatten it into Arabic Pop, hiding its regional character."
+  },
+  "shilat": {
+    "summary": "A chant and anthem-based local genre popular in Saudi Arabia and the Gulf.",
+    "whyLocal": "Strong vocal chants and local event context make it hard to surface as its own genre inside generic Arabic Pop recommendations."
+  },
+  "gqom": {
+    "summary": "A minimal, heavy South African club sound that grew out of Durban.",
+    "whyLocal": "Rawer and more club-rooted than Amapiano, it receives weaker external classification than its real-world reach deserves."
+  },
+  "fuji": {
+    "summary": "A percussion and chant-driven popular genre strong in Nigeria's Yoruba-speaking regions.",
+    "whyLocal": "Overshadowed by the global success of Afrobeats, it remains a major axis of local events and long-form live performance culture."
+  },
+  "chicha": {
+    "summary": "A Peruvian popular genre fusing psychedelic guitar with cumbia.",
+    "whyLocal": "It exports less than reggaeton or salsa even within Latin music, so its strong local identity stays hard to discover."
+  },
+  "vallenato": {
+    "summary": "Colombia's accordion-driven narrative popular music.",
+    "whyLocal": "It touches Latin pop stardom, but the genre's long-form storytelling and regional roots are under-recognized abroad."
+  },
+  "pimba": {
+    "summary": "Portugal's humorous, unabashed festival pop-folk genre.",
+    "whyLocal": "Lyrical humor and local festival context carry the genre, so its popularity is hard to gauge without translation."
+  },
+  "neomelodico": {
+    "summary": "An Italian local pop genre with strong Neapolitan melodrama.",
+    "whyLocal": "Outside Italy it is easily filed under mainstream Italian pop, which hides it as a distinct regional genre."
+  },
+  "enka": {
+    "summary": "A Japanese genre combining traditional vocal technique with popular song.",
+    "whyLocal": "It runs on a large generational, broadcast, and karaoke culture separate from J-pop, but global algorithms rarely recommend it."
+  },
+  "trot": {
+    "summary": "A Korean popular genre tightly linked to broadcast TV, live events, and karaoke culture.",
+    "whyLocal": "Unlike the K-pop export image, trot is a separate domestic market with strong generational fandoms and a TV ecosystem."
+  },
+  "sertanejo": {
+    "summary": "A country-pop family that ranks among Brazil's biggest popular genres.",
+    "whyLocal": "It is enormous on Brazilian domestic charts, yet global Latin music coverage keeps it far less visible than reggaeton or urbano."
+  },
+  "forro-pisadinha": {
+    "summary": "A dance-oriented popular genre family rooted in Brazil's Northeast.",
+    "whyLocal": "It commands a large party and festival market inside Brazil, but abroad it hides behind samba and bossa nova imagery."
+  },
+  "brega-funk": {
+    "summary": "A street dance-pop genre fusing Northeastern Brazilian brega with funk.",
+    "whyLocal": "Outside Brazil it is usually flattened into generic Brazilian funk, which erases the local scene's distinct identity."
+  },
+  "campursari-pop-jawa": {
+    "summary": "Indonesian local pop mixing Javanese-language popular song, campursari, and koplo sensibilities.",
+    "whyLocal": "It serves a huge language market within Indonesia, but external taxonomies lump it into generic Indonesian pop."
+  },
+  "schlager": {
+    "summary": "The German-language world's giant singalong and festival pop genre.",
+    "whyLocal": "It has a large generational and broadcast market across German-speaking countries, but English-language recommendation systems barely surface it."
+  },
+  "turbofolk": {
+    "summary": "The pop-folk and nightlife genre of Serbia and the Balkans.",
+    "whyLocal": "The Balkans run a large star system for it, but the current collection has no chart from those countries, so curation supplements the signal."
+  },
+  "maskandi": {
+    "summary": "A South African genre combining Zulu guitar tradition with modern popular music.",
+    "whyLocal": "It can chart strongly in South Africa, but the country's global music image centers on Amapiano, making maskandi hard to discover."
+  },
+  "bongo-flava": {
+    "summary": "The Swahili pop, hip-hop, and dancehall blend centered on Tanzania.",
+    "whyLocal": "It is a mega-genre in East Africa, but Tanzania is not in the current collection, so seed-based exploration fills the gap."
+  },
+  "rai": {
+    "summary": "The North African popular genre that spread worldwide from Oran, Algeria.",
+    "whyLocal": "Influential across North Africa and the French-speaking diaspora, yet on current global charts it usually dissolves into Arabic or French pop."
+  },
+  "vietnamese-bolero": {
+    "summary": "A Vietnamese popular genre combining bolero-style ballads with karaoke culture.",
+    "whyLocal": "Deeply familiar inside Vietnam and its diaspora, but rarely surfaced by Asian pop recommendations centered on K-pop and J-pop."
+  }
+}

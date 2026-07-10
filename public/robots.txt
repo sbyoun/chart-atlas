@@ -5,6 +5,12 @@ Allow: /privacy
 Allow: /contact
 Allow: /terms
 Allow: /methodology
+Allow: /weekly
+Allow: /weekly/
+Allow: /countries
+Allow: /countries/
+Allow: /genres
+Allow: /genres/
 Allow: /projects
 Allow: /financial-llm-terminal
 Allow: /music-atlas

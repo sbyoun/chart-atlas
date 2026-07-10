@@ -1,0 +1,30 @@
+{
+  "2026-07-04": {
+    "publishedAt": "2026-07-10",
+    "title": "Catalog revival met unusually broad country-level turnover",
+    "summary": "The aggregate table changed leader without becoming a simple story of one new release dominating every market. Justin Bieber's Beauty And A Beat moved ahead of Michael Jackson's Billie Jean through broad geographic reach, while several newer tracks produced sharper Top 10 concentration in fewer countries. That contrast matters: Chart Atlas rewards both spread and local strength, so the weekly leader is a cross-market signal rather than a claim about the world's single most-streamed song.",
+    "observations": [
+      {
+        "heading": "Reach and depth pointed to different leaders",
+        "body": "Beauty And A Beat appeared in 19 tracked markets and reached four local Top 10s. Billie Jean appeared in 18 markets but reached seven Top 10s. Their close aggregate scores show why country coverage and high local placement should be read together: the first had slightly wider reach, while the second retained deeper placement in more markets."
+      },
+      {
+        "heading": "Ordinary showed the cleanest expansion signal",
+        "body": "Alex Warren's Ordinary moved from aggregate #67 to #19 while expanding from four to eight tracked markets. This is a stronger discovery signal than a large rank jump confined to one country because both geographic coverage and aggregate position improved during the same comparison window."
+      },
+      {
+        "heading": "Two new aggregate entries arrived with different shapes",
+        "body": "Olivia Rodrigo's the cure entered at #13 across nine markets with three Top 10 placements. Ella Langley's Choosin' Texas entered at #17 across seven markets but reached five Top 10s. The former had wider initial distribution; the latter was more concentrated near the top of the markets where it appeared."
+      },
+      {
+        "heading": "Country leaders changed faster than the global aggregate",
+        "body": "After normalizing punctuation variants, 14 of 35 tracked countries changed their #1 song. Shakira's Dai Dai led Germany, Sweden, and the United Arab Emirates, while many other countries selected distinct local leaders. The result is a fragmented map: a few cross-market songs connected regions, but most #1 positions remained market-specific."
+      },
+      {
+        "heading": "Rock gained rank, but Pop retained the broadest genre footprint",
+        "body": "Rock / Alternative climbed from genre #4 to #2 with 146 matched chart songs, while Pop remained #1 with 364 matches. This movement indicates stronger relative representation for rock in the current snapshot, not that rock generated more total global listening than every genre outside this dataset."
+      }
+    ],
+    "disclosure": "This note was prepared from the 2026-07-04 and 2026-06-27 stored snapshots. It reports measured rank, coverage, and match changes; it does not infer promotional, cultural, or platform causes without an independent source."
+  }
+}
