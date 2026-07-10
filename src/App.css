@@ -61,11 +61,6 @@
   gap: 8px;
 }
 
-.topbar-ad {
-  flex: 1 1 360px;
-  justify-self: center;
-}
-
 .main-tabs {
   max-width: min(100%, 760px);
   height: 42px;
@@ -190,6 +185,19 @@ button {
 .app-content {
   min-width: 0;
   min-height: 0;
+}
+
+.app-content-with-ad {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.content-leaderboard-ad {
+  width: min(100% - 32px, 720px);
+  min-height: 66px;
+  margin: 0 auto;
+  padding: 8px 0;
+  border-bottom: 1px solid #dfe5ee;
 }
 
 .app-data-loading {

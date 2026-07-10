@@ -96,6 +96,12 @@ type AnalysisSnapshotData = {
   }>
 }
 
+type InitialChartAtlasData = {
+  schemaVersion: 1
+  snapshotIndex: SnapshotIndexData
+  latestSnapshot: ChartSnapshotData
+}
+
 type PlaylistStatus =
   | { type: 'idle'; message: string }
   | { type: 'working'; message: string }
@@ -105,6 +111,7 @@ type PlaylistStatus =
 const CONTACT_EMAIL = import.meta.env.VITE_CONTACT_EMAIL || 'team@foldalpha.com'
 const LOCALE_STORAGE_KEY = 'chart-atlas-locale'
 const THEME_STORAGE_KEY = 'chart-atlas-theme'
+const AUDIT_VISIT_STORAGE_KEY = 'chart-atlas-visit-id'
 const FOOTER_PAGE_TABS = new Set<MainTab>(['about', 'privacy', 'contact', 'terms', 'methodology'])
 const APP_BASE_PATH =
   import.meta.env.BASE_URL === '/' ? '' : import.meta.env.BASE_URL.replace(/\/$/, '')
@@ -117,6 +124,12 @@ const FOOTER_PAGE_PATHS: Record<
   contact: 'contact',
   terms: 'terms',
   methodology: 'methodology',
+}
+
+declare global {
+  interface Window {
+    __CHART_ATLAS_INITIAL_DATA__?: unknown
+  }
 }
 
 function appPath(path = '') {
@@ -278,6 +291,55 @@ function appUrl(path: string) {
 
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
   return `${APP_BASE_URL}${normalizedPath}`
+}
+
+function auditPath() {
+  return `${window.location.pathname}${window.location.search}${window.location.hash}`
+}
+
+function auditVisitId() {
+  try {
+    const existing = window.sessionStorage.getItem(AUDIT_VISIT_STORAGE_KEY)
+    if (existing) {
+      return existing
+    }
+
+    const next =
+      window.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
+    window.sessionStorage.setItem(AUDIT_VISIT_STORAGE_KEY, next)
+    return next
+  } catch {
+    return ''
+  }
+}
+
+function sendAuditEvent(payload: {
+  event: string
+  tab?: MainTab
+  locale?: Locale
+  theme?: ThemeMode
+  snapshotDate?: string
+}) {
+  const body = JSON.stringify({
+    visitId: auditVisitId(),
+    path: auditPath(),
+    ...payload,
+  })
+  const url = appUrl('/api/audit/event')
+
+  if (navigator.sendBeacon) {
+    const sent = navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }))
+    if (sent) {
+      return
+    }
+  }
+
+  void fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+    keepalive: true,
+  }).catch(() => {})
 }
 
 function rankScore(rank: number) {
@@ -471,6 +533,39 @@ function isAnalysisSnapshotData(value: unknown): value is AnalysisSnapshotData {
     Array.isArray(candidate.trackStats) &&
     Array.isArray(candidate.artistStats)
   )
+}
+
+function isInitialChartAtlasData(value: unknown): value is InitialChartAtlasData {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+
+  const candidate = value as Partial<InitialChartAtlasData>
+
+  return (
+    candidate.schemaVersion === 1 &&
+    isSnapshotIndexData(candidate.snapshotIndex) &&
+    isChartSnapshotData(candidate.latestSnapshot)
+  )
+}
+
+function readInitialChartAtlasData() {
+  if (typeof window === 'undefined' || !isInitialChartAtlasData(window.__CHART_ATLAS_INITIAL_DATA__)) {
+    return null
+  }
+
+  const payload = window.__CHART_ATLAS_INITIAL_DATA__
+  const latestDate = payload.snapshotIndex.latestDate || payload.latestSnapshot.snapshotDate
+  const selectedDate =
+    payload.latestSnapshot.snapshotDate === latestDate
+      ? latestDate
+      : payload.latestSnapshot.snapshotDate
+
+  return {
+    snapshot: payload.latestSnapshot,
+    snapshotIndex: payload.snapshotIndex.snapshots,
+    selectedDate,
+  }
 }
 
 function previousSnapshotEntryForDate(
@@ -730,14 +825,19 @@ function RankTokens({
   )
 }
 
+const initialChartAtlasData = readInitialChartAtlasData()
+const initialSnapshot = initialChartAtlasData?.snapshot ?? demoSnapshot
+const initialSnapshotIndex = initialChartAtlasData?.snapshotIndex ?? []
+const initialSelectedDate = initialChartAtlasData?.selectedDate ?? initialSnapshot.snapshotDate
+
 function App() {
   const [mainTab, setMainTab] = useState<MainTab>(initialMainTab)
   const [locale, setLocale] = useState<Locale>(initialLocale)
   const [theme, setTheme] = useState<ThemeMode>(initialTheme)
-  const [snapshot, setSnapshot] = useState<ChartSnapshotData>(demoSnapshot)
-  const [snapshotIndex, setSnapshotIndex] = useState<SnapshotIndexEntry[]>([])
-  const [selectedDate, setSelectedDate] = useState(demoSnapshot.snapshotDate)
-  const [snapshotLoading, setSnapshotLoading] = useState(true)
+  const [snapshot, setSnapshot] = useState<ChartSnapshotData>(initialSnapshot)
+  const [snapshotIndex, setSnapshotIndex] = useState<SnapshotIndexEntry[]>(initialSnapshotIndex)
+  const [selectedDate, setSelectedDate] = useState(initialSelectedDate)
+  const [snapshotLoading, setSnapshotLoading] = useState(!initialChartAtlasData)
   const [snapshotFetchFailed, setSnapshotFetchFailed] = useState(false)
   const [previousSnapshot, setPreviousSnapshot] = useState<ChartSnapshotData | null>(null)
   const [previousSnapshotLoading, setPreviousSnapshotLoading] = useState(false)
@@ -746,8 +846,8 @@ function App() {
   const [analysisHistory, setAnalysisHistory] = useState<AnalysisSnapshotData[]>([])
   const [analysisHistoryLoading, setAnalysisHistoryLoading] = useState(false)
   const [selectedCountryCode, setSelectedCountryCode] = useState('US')
-  const [selectedTrackId, setSelectedTrackId] = useState(demoSnapshot.tracks[0].id)
-  const [selectedArtistId, setSelectedArtistId] = useState(demoSnapshot.tracks[0].artistId)
+  const [selectedTrackId, setSelectedTrackId] = useState(initialSnapshot.tracks[0].id)
+  const [selectedArtistId, setSelectedArtistId] = useState(initialSnapshot.tracks[0].artistId)
   const [hoveredCountryCode, setHoveredCountryCode] = useState<string | null>(null)
   const [analysisTab, setAnalysisTab] = useState<AnalysisTab>('artist')
   const [query, setQuery] = useState('')
@@ -795,6 +895,20 @@ function App() {
   }, [theme])
 
   useEffect(() => {
+    sendAuditEvent({
+      event: 'tab.view',
+      tab: mainTab,
+      locale,
+      theme,
+      snapshotDate: selectedDate,
+    })
+  }, [locale, mainTab, selectedDate, theme])
+
+  useEffect(() => {
+    if (initialChartAtlasData) {
+      return
+    }
+
     let ignore = false
 
     async function loadInitialSnapshot() {
@@ -1317,6 +1431,11 @@ function App() {
           ),
         }
       : playlistStatus
+  const contentAdEligible =
+    snapshot !== demoSnapshot &&
+    !snapshotLoading &&
+    !initialDataPending &&
+    (mainTab === 'atlas' || mainTab === 'genres' || mainTab === 'rising')
 
   return (
     <main className="app-shell">
@@ -1330,8 +1449,6 @@ function App() {
             <p>{pick(locale, 'Global music chart atlas', '국가별 차트 지형도')}</p>
           </div>
         </div>
-
-        <AdSlot placement="header" className="topbar-ad" />
 
         <div className="topbar-actions">
           <nav className="main-tabs" aria-label={pick(locale, 'main sections', '주요 섹션')}>
@@ -1383,7 +1500,10 @@ function App() {
         </div>
       </header>
 
-      <div className={`app-content app-content-${mainTab}`}>
+      <div
+        className={`app-content app-content-${mainTab}${contentAdEligible ? ' app-content-with-ad' : ''}`}
+      >
+      {contentAdEligible ? <AdSlot placement="header" className="content-leaderboard-ad" /> : null}
       {initialDataPending && (mainTab === 'atlas' || mainTab === 'genres' || mainTab === 'taste') ? (
         <section className="app-data-loading" role="status">
           <Loader2 size={22} />
@@ -1624,6 +1744,15 @@ function App() {
           )}
         </span>
         <nav className="footer-links" aria-label={pick(locale, 'site information links', '사이트 정보 링크')}>
+          <a href={appPath('weekly')}>
+            {pick(locale, 'Reports', '리포트')}
+          </a>
+          <a href={appPath('countries')}>
+            {pick(locale, 'Countries', '국가 리포트')}
+          </a>
+          <a href={appPath('genres')}>
+            {pick(locale, 'Genres', '장르 리포트')}
+          </a>
           <a href={footerTabPath('about')} onClick={(event) => { event.preventDefault(); selectMainTab('about') }}>
             {pick(locale, 'About', '서비스 정보')}
           </a>
