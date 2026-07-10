@@ -2022,8 +2022,18 @@ function formatCrawlerNumber(value) {
   return Number.isFinite(Number(value)) ? Number(value).toLocaleString('en-US') : '';
 }
 
+const jsonFileCache = new Map();
+
 function readJsonFile(filePath) {
-  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  const mtimeMs = fs.statSync(filePath).mtimeMs;
+  const cached = jsonFileCache.get(filePath);
+  if (cached && cached.mtimeMs === mtimeMs) {
+    return cached.data;
+  }
+
+  const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  jsonFileCache.set(filePath, { mtimeMs, data });
+  return data;
 }
 
 function resolvePublicDataFile(publicDataPath) {
@@ -2279,6 +2289,23 @@ function genreSignalIsIndexable(signal) {
   );
 }
 
+const genreEditorialEnPath = path.join(__dirname, 'content', 'genre-editorial-en.json');
+
+function genreEditorialEn(genreId) {
+  if (!fs.existsSync(genreEditorialEnPath)) {
+    return null;
+  }
+
+  try {
+    const editorial = readJsonFile(genreEditorialEnPath);
+    const entry = editorial?.[genreId];
+    return entry && typeof entry === 'object' ? entry : null;
+  } catch (error) {
+    console.error(`[genre.editorial] ${error instanceof Error ? error.message : String(error)}`);
+    return null;
+  }
+}
+
 function loadWeeklyEditorialNote(date) {
   if (!date || !fs.existsSync(weeklyEditorialNotesPath)) {
     return null;
@@ -2298,6 +2325,34 @@ function previousSnapshotEntry(date) {
   const snapshots = loadSnapshotIndex().snapshots;
   const index = snapshots.findIndex((entry) => entry.date === date);
   return index >= 0 ? snapshots[index + 1] || null : null;
+}
+
+function loadGenreDiscoveryForDateStrict(date) {
+  const filePath = date ? resolvePublicDataFile(`/data/genre-discovery/${date}.json`) : null;
+  return filePath ? readJsonFile(filePath) : null;
+}
+
+function aggregateTrackStatsMap(analysis) {
+  return new Map((analysis?.trackStats || []).map((stat) => [stat.trackId, stat]));
+}
+
+function loadSnapshotHistory(limit = 16) {
+  return loadSnapshotIndex()
+    .snapshots.slice(0, limit)
+    .map((entry) => ({ entry, snapshot: loadSnapshotFromEntry(entry) }))
+    .filter((item) => item.snapshot);
+}
+
+function countryChartChurn(currentSnapshot, previousSnapshot, countryCode) {
+  const currentEntries = chartForCountry(currentSnapshot, countryCode)?.entries || [];
+  const previousEntries = chartForCountry(previousSnapshot, countryCode)?.entries || [];
+  if (!currentEntries.length || !previousEntries.length) {
+    return null;
+  }
+
+  const previousIds = new Set(previousEntries.map((entry) => entry.trackId));
+  const newCount = currentEntries.filter((entry) => !previousIds.has(entry.trackId)).length;
+  return newCount / currentEntries.length;
 }
 
 function trackByIdMap(snapshot) {
@@ -2970,9 +3025,125 @@ function countryReportPage(code) {
   const risingCount = topTen.filter((item) => item.movement.label.startsWith('up ')).length;
   const totalStreams = topTen.reduce((sum, item) => sum + Number(item.entry.streams || 0), 0);
 
+  const analysis = loadAnalysisFromEntry(entry);
+  const aggregateByTrackId = aggregateTrackStatsMap(analysis);
+  const totalCountries = (snapshot.countries || []).length;
+  const allEntries = chart.entries || [];
+
+  const localFavorites = topTen
+    .filter((item) => item.track)
+    .map((item) => ({ ...item, stat: aggregateByTrackId.get(item.entry.trackId) }))
+    .filter((item) => item.stat && item.stat.appearances <= 3)
+    .slice(0, 3);
+  const localTrackIds = new Set(allEntries.map((chartEntry) => chartEntry.trackId));
+  const missingGlobalHits = (analysis?.trackStats || [])
+    .slice(0, 15)
+    .filter((stat) => !localTrackIds.has(stat.trackId));
+  const exclusives = allEntries
+    .map((chartEntry) => ({
+      chartEntry,
+      stat: aggregateByTrackId.get(chartEntry.trackId),
+      track: trackById.get(chartEntry.trackId),
+    }))
+    .filter((item) => item.track && item.stat && item.stat.appearances === 1);
+
+  const history = loadSnapshotHistory();
+  const numberOneId = numberOne?.entry?.trackId || '';
+  let numberOneTenure = 0;
+  for (const item of history) {
+    const localLeader = chartForCountry(item.snapshot, normalizedCode)?.entries?.[0];
+    if (!localLeader || !numberOneId || localLeader.trackId !== numberOneId) break;
+    numberOneTenure += 1;
+  }
+  const topTenPresenceWeeks = new Map();
+  for (const item of history) {
+    const weekTopTenIds = new Set(
+      (chartForCountry(item.snapshot, normalizedCode)?.entries || [])
+        .slice(0, 10)
+        .map((chartEntry) => chartEntry.trackId),
+    );
+    for (const local of topTen) {
+      if (local.track && weekTopTenIds.has(local.entry.trackId)) {
+        topTenPresenceWeeks.set(
+          local.entry.trackId,
+          (topTenPresenceWeeks.get(local.entry.trackId) || 0) + 1,
+        );
+      }
+    }
+  }
+  const longestRunning = topTen
+    .filter((item) => item.track)
+    .map((item) => ({ ...item, weeks: topTenPresenceWeeks.get(item.entry.trackId) || 0 }))
+    .sort((a, b) => b.weeks - a.weeks)[0] || null;
+
+  const churnHere = countryChartChurn(snapshot, previousSnapshot, normalizedCode);
+  const churnValues = (snapshot.countries || [])
+    .map((item) => countryChartChurn(snapshot, previousSnapshot, item.code))
+    .filter((value) => value !== null);
+  const averageChurn = churnValues.length
+    ? churnValues.reduce((sum, value) => sum + value, 0) / churnValues.length
+    : null;
+
+  const describeSong = (title, artist) => `<strong>${escapeHtml(title)}</strong> by ${escapeHtml(artist)}`;
+
+  const localFavoriteText = localFavorites.length
+    ? `The clearest local signals this week: ${localFavorites
+        .map(
+          (item) =>
+            `${describeSong(item.track.title, item.track.artist)} (local #${item.entry.rank}, on ${formatArticleNumber(item.stat.appearances)} of ${formatArticleNumber(totalCountries)} tracked charts)`,
+        )
+        .join('; ')}. Songs like these hold Top 10 positions in ${escapeHtml(country.name)} while staying nearly invisible in the cross-country aggregate — usually a sign of language-market momentum or a domestic release cycle rather than a global push.`
+    : `Every current ${escapeHtml(country.name)} Top 10 song also appears on at least three other tracked country charts this week, so the local list mostly mirrors cross-market consensus rather than a domestic-only cycle.`;
+
+  const missingHitsText = missingGlobalHits.length
+    ? `Working in the other direction, ${formatArticleNumber(missingGlobalHits.length)} of the current global aggregate Top 15 songs do not chart in ${escapeHtml(country.name)} at all this week, including ${missingGlobalHits
+        .slice(0, 3)
+        .map((stat) => describeSong(stat.title, stat.artist))
+        .join(', ')}. When a cross-market hit skips a market entirely, the gap usually maps to language, genre preference, or a local release calendar.`
+    : `Every song in the current global aggregate Top 15 also appears somewhere in the ${escapeHtml(country.name)} chart — an unusually high overlap with the cross-market consensus.`;
+
+  const exclusivesText = exclusives.length
+    ? `<p>${formatArticleNumber(exclusives.length)} of the ${formatArticleNumber(allEntries.length)} songs on the full ${escapeHtml(country.name)} chart appear nowhere else in the tracked set this week. The highest-ranked market exclusives: ${exclusives
+        .slice(0, 3)
+        .map((item) => `${describeSong(item.track.title, item.track.artist)} at local #${item.chartEntry.rank}`)
+        .join('; ')}.</p>`
+    : '';
+
+  const previousTrackById = trackByIdMap(previousSnapshot);
+  const previousLeaderEntry = previousChart?.entries?.[0];
+  const previousLeaderTrack = previousLeaderEntry
+    ? previousTrackById.get(previousLeaderEntry.trackId)
+    : null;
+  let tenureText = '';
+  if (numberOne?.track && numberOneTenure >= 2) {
+    tenureText = `${describeSong(numberOne.track.title, numberOne.track.artist)} has now led the ${escapeHtml(country.name)} chart for ${formatArticleNumber(numberOneTenure)} consecutive stored weeks.`;
+  } else if (numberOne?.track && previousLeaderTrack && previousLeaderEntry.trackId !== numberOneId) {
+    tenureText = `${describeSong(numberOne.track.title, numberOne.track.artist)} is a new local #1, replacing ${describeSong(previousLeaderTrack.title, previousLeaderTrack.artist)} from the previous stored week.`;
+  } else if (numberOne?.track) {
+    tenureText = `${describeSong(numberOne.track.title, numberOne.track.artist)} leads the current ${escapeHtml(country.name)} chart.`;
+  }
+  const longevityText =
+    longestRunning && longestRunning.weeks >= 2
+      ? `The longest-running current Top 10 song is ${describeSong(longestRunning.track.title, longestRunning.track.artist)}, present in the local Top 10 for ${formatArticleNumber(longestRunning.weeks)} of the last ${formatArticleNumber(history.length)} stored weeks.`
+      : `No current Top 10 song carries more than one stored week of local Top 10 tenure, which marks this as a fully refreshed local list.`;
+
+  let churnText = '';
+  if (churnHere !== null && averageChurn !== null) {
+    const herePct = Math.round(churnHere * 100);
+    const avgPct = Math.round(averageChurn * 100);
+    const diff = churnHere - averageChurn;
+    if (diff > 0.08) {
+      churnText = `<p>${formatArticleNumber(herePct)}% of the full local chart is new versus the previous stored week, clearly above the ${formatArticleNumber(avgPct)}% average across all ${formatArticleNumber(totalCountries)} tracked countries. ${escapeHtml(country.name)} is one of the more volatile markets in this comparison window.</p>`;
+    } else if (diff < -0.08) {
+      churnText = `<p>Only ${formatArticleNumber(herePct)}% of the full local chart changed versus the previous stored week, below the ${formatArticleNumber(avgPct)}% average across all ${formatArticleNumber(totalCountries)} tracked countries. ${escapeHtml(country.name)} is currently one of the more stable markets in the set.</p>`;
+    } else {
+      churnText = `<p>${formatArticleNumber(herePct)}% of the full local chart is new versus the previous stored week, in line with the ${formatArticleNumber(avgPct)}% average across the tracked set — typical turnover for this comparison window.</p>`;
+    }
+  }
+
   return articlePage({
     title: `${country.name} music chart report`,
-    description: `${country.name} Top 10 music chart report from Chart Atlas, including week-over-week movement and stream counts.`,
+    description: `${country.name} music chart report for ${entry.date}: ${numberOne?.track?.title || 'the current #1'} by ${numberOne?.track?.artist || 'unknown artist'} leads the Top 10, with week-over-week movement, local-only songs, and global comparison.`,
     canonicalPath: `/countries/${country.code.toLowerCase()}`,
     eyebrow: 'Country chart report',
     body: `
@@ -2987,6 +3158,13 @@ function countryReportPage(code) {
       </div>
       <h2>${escapeHtml(country.name)} Top 10</h2>
       <table><thead><tr><th>Rank</th><th>Song</th><th>Artist</th><th>Movement</th><th>Streams</th></tr></thead><tbody>${rows}</tbody></table>
+      <h2>Local signal versus the global table</h2>
+      <p>${localFavoriteText}</p>
+      <p>${missingHitsText}</p>
+      ${exclusivesText}
+      <h2>Stability and turnover</h2>
+      <p>${tenureText} ${longevityText}</p>
+      ${churnText}
       <h2>How to read this market</h2>
       <p>${escapeHtml(country.name)} belongs to the ${escapeHtml(country.region)} region in Chart Atlas. A song that rises here but remains flat globally can indicate a local event, language-market momentum, or a regional genre signal. A song that is simultaneously strong here and in several other countries is more likely to be part of a cross-market trend.</p>
       <p class="note">The movement labels compare stored weekly snapshots. They are not a claim about every daily chart change between the two capture dates.</p>
@@ -3019,6 +3197,77 @@ function genreReportPage(genreId) {
   const topTrack = matchedTracks[0];
   const hasChartEvidence = genreSignalHasChartEvidence(signal);
   const isIndexable = genreSignalIsIndexable(signal);
+
+  const previousEntry = previousSnapshotEntry(entry.date);
+  const previousGenreData = loadGenreDiscoveryForDateStrict(previousEntry?.date);
+  const previousSignal = (previousGenreData?.signals || []).find(
+    (item) => item.genre?.id === genreId,
+  );
+  let movementText = '';
+  if (previousSignal) {
+    const rankDelta = Number(previousSignal.rank) - Number(signal.rank);
+    const matchedDelta = genreMatchedTrackCount(signal) - genreMatchedTrackCount(previousSignal);
+    const matchedPhrase =
+      matchedDelta === 0
+        ? `an unchanged count of ${formatArticleNumber(genreMatchedTrackCount(signal))} matched chart songs`
+        : `${formatArticleNumber(Math.abs(matchedDelta))} ${matchedDelta > 0 ? 'more' : 'fewer'} matched chart songs (${formatArticleNumber(genreMatchedTrackCount(previousSignal))} → ${formatArticleNumber(genreMatchedTrackCount(signal))})`;
+    if (rankDelta > 0) {
+      movementText = `<p>Versus the ${escapeHtml(previousEntry.date)} snapshot, ${escapeHtml(signal.genre.name)} climbed from genre rank #${formatArticleNumber(previousSignal.rank)} to #${formatArticleNumber(signal.rank)} with ${matchedPhrase}. A rank gain here means stronger relative representation among current charting songs, not a claim about total listening.</p>`;
+    } else if (rankDelta < 0) {
+      movementText = `<p>Versus the ${escapeHtml(previousEntry.date)} snapshot, ${escapeHtml(signal.genre.name)} slipped from genre rank #${formatArticleNumber(previousSignal.rank)} to #${formatArticleNumber(signal.rank)} with ${matchedPhrase}. Rank losses in this table track relative representation among matched chart songs.</p>`;
+    } else {
+      movementText = `<p>Versus the ${escapeHtml(previousEntry.date)} snapshot, ${escapeHtml(signal.genre.name)} held genre rank #${formatArticleNumber(signal.rank)} with ${matchedPhrase}.</p>`;
+    }
+  } else if (previousEntry) {
+    movementText = `<p>The ${escapeHtml(previousEntry.date)} snapshot has no stored signal for this genre, so no week-over-week comparison is available yet.</p>`;
+  }
+
+  const totalMatched = matchedTracks.length;
+  let concentrationText = '';
+  if (totalMatched >= 3 && topCountries.length > 0) {
+    const [topCountryName, topCountryCount] = topCountries[0];
+    const topShare = topCountryCount / totalMatched;
+    const namedSpread = topCountries
+      .slice(0, 3)
+      .map(([name, count]) => `${escapeHtml(name)} (${formatArticleNumber(count)})`)
+      .join(', ');
+    if (topShare >= 0.5) {
+      concentrationText = `<p>The signal is heavily concentrated: ${escapeHtml(topCountryName)} alone contributes ${formatArticleNumber(Math.round(topShare * 100))}% of the ${formatArticleNumber(totalMatched)} matched songs. This reads as a domestic or language-market genre first, with limited cross-border chart presence this week.</p>`;
+    } else if (topShare >= 0.3) {
+      concentrationText = `<p>The signal leans on a small group of markets — ${namedSpread} lead the count of ${formatArticleNumber(totalMatched)} matched songs. The genre travels beyond one country, but its chart weight is still regionally anchored.</p>`;
+    } else {
+      concentrationText = `<p>The signal is broadly distributed across ${formatArticleNumber(countryCounts.size)} countries, led by ${namedSpread} out of ${formatArticleNumber(totalMatched)} matched songs. No single market dominates, which is the profile of a genuinely cross-market genre this week.</p>`;
+    }
+  }
+
+  const artistCounts = new Map();
+  for (const item of matchedTracks) {
+    const artistName = String(item.track?.artist || '').trim();
+    if (!artistName) continue;
+    const record = artistCounts.get(artistName) || { count: 0, countries: new Set(), bestRank: Infinity };
+    record.count += 1;
+    if (item.country?.name) record.countries.add(item.country.name);
+    const rank = Number(item.entry?.rank);
+    if (Number.isFinite(rank)) record.bestRank = Math.min(record.bestRank, rank);
+    artistCounts.set(artistName, record);
+  }
+  const topArtists = [...artistCounts.entries()]
+    .sort((a, b) => b[1].count - a[1].count || a[1].bestRank - b[1].bestRank)
+    .slice(0, 8);
+  const artistRows = topArtists
+    .map(
+      ([artistName, record]) =>
+        `<tr><td>${escapeHtml(artistName)}</td><td>${formatArticleNumber(record.count)}</td><td>${escapeHtml([...record.countries].slice(0, 5).join(', '))}</td><td>${Number.isFinite(record.bestRank) ? `#${formatArticleNumber(record.bestRank)}` : '—'}</td></tr>`,
+    )
+    .join('\n');
+  const artistSection =
+    hasChartEvidence && topArtists.length > 0
+      ? `
+      <h2>Artists carrying the signal</h2>
+      <table><thead><tr><th>Artist</th><th>Matched songs</th><th>Countries</th><th>Best local rank</th></tr></thead><tbody>${artistRows}</tbody></table>
+    `
+      : '';
+
   const evidenceBody = hasChartEvidence
     ? `
       <h2>Matched chart songs</h2>
@@ -3034,23 +3283,35 @@ function genreReportPage(genreId) {
     ? `<p class="note">This page currently has ${formatArticleNumber(genreMatchedTrackCount(signal))} matched chart ${genreMatchedTrackCount(signal) === 1 ? 'song' : 'songs'}. Chart Atlas requires at least ${formatArticleNumber(MIN_INDEXABLE_GENRE_TRACKS)} matches before a genre report enters the search sitemap, so this reference page is marked noindex for now.</p>`
     : '';
 
+  const editorial = genreEditorialEn(genreId);
+  const summaryText =
+    editorial?.summary ||
+    signal.genre.summary ||
+    `${signal.genre.name} is tracked as a Chart Atlas genre signal.`;
+  const whyLocalText =
+    editorial?.whyLocal ||
+    signal.genre.whyLocal ||
+    'The genre appears because current charting songs matched genre metadata, artist context, or track-level evidence.';
+
   return articlePage({
     title: `${signal.genre.name} genre signal report`,
-    description: `${signal.genre.name} genre report from Chart Atlas, ranked #${signal.rank} by current chart-matched songs.`,
+    description: `${signal.genre.name} genre report from Chart Atlas for ${entry.date}, ranked #${signal.rank} with ${genreMatchedTrackCount(signal)} matched chart songs across country charts.`,
     canonicalPath: `/genres/${signal.genre.id}`,
     eyebrow: 'Genre signal report',
     robots: isIndexable ? 'index, follow' : 'noindex, follow',
     body: `
       <h1>${escapeHtml(signal.genre.name)} genre signal report</h1>
-      <p class="lede">${escapeHtml(signal.genre.summary || `${signal.genre.name} is tracked as a Chart Atlas genre signal.`)} This page explains the latest chart evidence behind the genre ranking rather than treating the genre as a fixed country label.</p>
+      <p class="lede">${escapeHtml(summaryText)} This page explains the latest chart evidence behind the genre ranking rather than treating the genre as a fixed country label.</p>
       <div class="meta"><span>Latest week: ${escapeHtml(entry.date)}</span><span>Genre rank: #${formatArticleNumber(signal.rank)}</span><span>Score: ${formatArticleNumber(Math.round(signal.chartPopularityScore || 0))}</span><span>Confidence: ${escapeHtml(signal.confidence || 'chart')}</span></div>
       <div class="grid">
         <div class="card"><strong>${formatArticleNumber(genreMatchedTrackCount(signal))}</strong><small>matched current chart songs</small></div>
         <div class="card"><strong>${escapeHtml(topTrack?.track?.title || 'No matched track')}</strong><small>highest-ranked matched example by ${escapeHtml(topTrack?.track?.artist || 'unknown artist')}</small></div>
       </div>
       <h2>Why this genre appears in the ranking</h2>
-      <p>${escapeHtml(signal.genre.whyLocal || 'The genre appears because current charting songs matched genre metadata, artist context, or track-level evidence.')}</p>
+      <p>${escapeHtml(whyLocalText)}</p>
+      ${movementText || concentrationText ? `<h2>Week-over-week movement and spread</h2>${movementText}${concentrationText}` : ''}
       ${evidenceBody}
+      ${artistSection}
       ${indexingNote}
       <p class="note">Genre scores are generated from charting songs and their metadata evidence. A song can contribute to more than one genre when the available metadata supports multiple labels.</p>
     `,
@@ -3068,9 +3329,6 @@ function buildDynamicSitemapXml() {
     { loc: '/contact', changefreq: 'monthly', priority: '0.7' },
     { loc: '/terms', changefreq: 'monthly', priority: '0.7' },
     { loc: '/methodology', changefreq: 'monthly', priority: '0.8' },
-    { loc: '/projects', changefreq: 'monthly', priority: '0.6' },
-    { loc: '/financial-llm-terminal', changefreq: 'monthly', priority: '0.6' },
-    { loc: '/music-atlas', changefreq: 'monthly', priority: '0.6' },
   ];
   const index = loadSnapshotIndex();
   const latestEntry = resolveSnapshotEntry();
