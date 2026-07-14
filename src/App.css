@@ -1,5 +1,8 @@
 .app-shell {
   display: grid;
+  /* Without an explicit column, the implicit auto track grows to the widest
+     child's min-content and drags the whole page past the mobile viewport. */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr) auto;
   min-height: 100vh;
   color: #172033;
@@ -189,6 +192,7 @@ button {
 
 .app-content-with-ad {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
 }
 
@@ -278,7 +282,8 @@ html[data-theme='dark'] .app-data-loading {
   flex-wrap: wrap;
 }
 
-.status-strip span {
+.status-strip span,
+.status-strip button.status-insight {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -294,6 +299,16 @@ html[data-theme='dark'] .app-data-loading {
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.status-strip button.status-insight {
+  cursor: pointer;
+  text-align: left;
+}
+
+.status-strip button.status-insight:hover {
+  border-color: #0f766e;
+  color: #0f766e;
 }
 
 .date-strip {
@@ -681,6 +696,11 @@ tbody tr.selected {
 .chart-movement.unknown {
   min-width: 52px;
   color: #64748b;
+  background: #eef2f7;
+}
+
+.chart-movement.loading {
+  color: #94a3b8;
   background: #eef2f7;
 }
 
@@ -1109,6 +1129,26 @@ tr.selected .country-sticky {
     padding-inline: 14px;
   }
 
+  /* Pills hold long copy (top-track insight); let them wrap instead of
+     running past the narrow viewport. */
+  .status-strip span,
+  .status-strip button.status-insight {
+    height: auto;
+    min-height: 30px;
+    padding-block: 5px;
+    white-space: normal;
+  }
+
+  .date-picker {
+    max-width: 100%;
+  }
+
+  .date-picker select {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
+  }
+
   .board-panel {
     width: calc(100% - 28px);
     padding: 12px;
@@ -1200,6 +1240,7 @@ html[data-theme='dark'] .track-name small,
 html[data-theme='dark'] .country-cell small,
 html[data-theme='dark'] .board-track small,
 html[data-theme='dark'] .status-strip span,
+html[data-theme='dark'] .status-strip button.status-insight,
 html[data-theme='dark'] .date-picker,
 html[data-theme='dark'] .formula-note,
 html[data-theme='dark'] .playlist-status,
@@ -1222,6 +1263,7 @@ html[data-theme='dark'] .focus-pill,
 html[data-theme='dark'] .formula-note,
 html[data-theme='dark'] .tabs,
 html[data-theme='dark'] .status-strip span,
+html[data-theme='dark'] .status-strip button.status-insight,
 html[data-theme='dark'] .trend-summary span,
 html[data-theme='dark'] .trend-legend button,
 html[data-theme='dark'] .rank-tokens button,
@@ -1348,6 +1390,11 @@ html[data-theme='dark'] .change.flat,
 html[data-theme='dark'] .chart-movement.same,
 html[data-theme='dark'] .chart-movement.unknown {
   color: #cbd5e1;
+  background: #1e293b;
+}
+
+html[data-theme='dark'] .chart-movement.loading {
+  color: #64748b;
   background: #1e293b;
 }
 

@@ -173,7 +173,7 @@ type RankedCountry = {
 }
 
 type ChartMovement = {
-  status: 'new' | 'up' | 'down' | 'same' | 'unknown'
+  status: 'new' | 'up' | 'down' | 'same' | 'unknown' | 'loading'
   previousDate?: string
   previousRank?: number
   delta: number
@@ -599,15 +599,19 @@ function movementForEntry({
   countryCode,
   entry,
   previousDate,
+  previousLoading,
   previousRankLookup,
 }: {
   countryCode: string
   entry: ChartEntry
   previousDate?: string
+  previousLoading: boolean
   previousRankLookup: Map<string, Map<string, number>>
 }): ChartMovement {
   if (!previousDate) {
-    return { status: 'unknown', delta: 0 }
+    // While the previous week is still on its way, "no previous snapshot"
+    // would be a false statement — keep the badge in a loading state instead.
+    return { status: previousLoading ? 'loading' : 'unknown', delta: 0 }
   }
 
   const previousRank = previousRankLookup.get(countryCode)?.get(entry.trackId)
@@ -840,9 +844,14 @@ function App() {
   const [snapshotLoading, setSnapshotLoading] = useState(!initialChartAtlasData)
   const [snapshotFetchFailed, setSnapshotFetchFailed] = useState(false)
   const [previousSnapshot, setPreviousSnapshot] = useState<ChartSnapshotData | null>(null)
-  const [previousSnapshotLoading, setPreviousSnapshotLoading] = useState(false)
+  // Start in the loading state whenever a previous week exists, so the very
+  // first paint never claims "no previous snapshot" before the fetch effect runs.
+  const [previousSnapshotLoading, setPreviousSnapshotLoading] = useState(() =>
+    Boolean(previousSnapshotEntryForDate(initialSnapshotIndex, initialSelectedDate)),
+  )
   const [snapshotHistory, setSnapshotHistory] = useState<ChartSnapshotData[]>([])
   const [snapshotHistoryLoading, setSnapshotHistoryLoading] = useState(false)
+  const analysisWorkspaceRef = useRef<HTMLElement | null>(null)
   const [analysisHistory, setAnalysisHistory] = useState<AnalysisSnapshotData[]>([])
   const [analysisHistoryLoading, setAnalysisHistoryLoading] = useState(false)
   const [selectedCountryCode, setSelectedCountryCode] = useState('US')
@@ -1054,7 +1063,11 @@ function App() {
       setPreviousSnapshotLoading(true)
 
       try {
-        const response = await fetch(`${appUrl(snapshotEntry.file)}?v=${Date.now()}`)
+        // Deterministic version param (not Date.now()) so the server-emitted
+        // <link rel="preload"> for the previous week matches this request.
+        const response = await fetch(
+          `${appUrl(snapshotEntry.file)}?v=${encodeURIComponent(snapshotEntry.generatedAt || snapshotEntry.date)}`,
+        )
 
         if (!response.ok) {
           throw new Error(`previous snapshot fetch failed: ${response.status}`)
@@ -1276,6 +1289,7 @@ function App() {
           countryCode: country.code,
           entry,
           previousDate: previousSnapshotDate,
+          previousLoading: previousSnapshotLoading,
           previousRankLookup,
         }),
       }))
@@ -1284,7 +1298,7 @@ function App() {
 
       return { country, chart, leadEntry, leadTrack }
     })
-  }, [chartByCountry, countries, previousRankLookup, previousSnapshotDate, trackById])
+  }, [chartByCountry, countries, previousRankLookup, previousSnapshotDate, previousSnapshotLoading, trackById])
 
   const songRows = useMemo(() => {
     return trackStats.filter((stat) => {
@@ -1328,6 +1342,17 @@ function App() {
   function selectTrackFromBoard(trackId: string) {
     setQuery('')
     selectTrack(trackId)
+  }
+
+  // The insight pill promises a map story; clicking it selects the top track
+  // (map highlight + song panel) and brings the below-the-fold map into view.
+  function focusTopTrackOnMap() {
+    selectTrackFromBoard(topTrack.track.id)
+    // Deferred past the commit so the analysis table's own selected-row
+    // scroll (block: 'nearest') cannot override this page-level scroll.
+    window.setTimeout(() => {
+      analysisWorkspaceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 150)
   }
 
   function selectArtist(artistId: string) {
@@ -1567,7 +1592,16 @@ function App() {
               <Crown size={15} />
               {topTrack.track.title} · {topTrack.track.artist}
             </span>
-            <span className="status-insight">
+            <button
+              type="button"
+              className="status-insight"
+              title={pick(
+                locale,
+                `Show ${topTrack.track.title} on the map`,
+                `${topTrack.track.title} 차트인 국가를 지도에서 보기`,
+              )}
+              onClick={focusTopTrackOnMap}
+            >
               {topTrack.topOnes > 0
                 ? pick(
                     locale,
@@ -1579,7 +1613,8 @@ function App() {
                     `#1 nowhere, yet charting in ${topTrack.appearances} countries — the most evenly loved song this week`,
                     `0개국 1위, 그러나 ${topTrack.appearances}개국 차트인 — 이번 주 가장 고르게 사랑받는 곡`,
                   )}
-            </span>
+              <span aria-hidden="true"> ↓</span>
+            </button>
             {snapshotLoading ? <span>{pick(locale, 'Loading data', '데이터 로딩 중')}</span> : null}
           </section>
 
@@ -1618,7 +1653,7 @@ function App() {
             onSelectTrack={selectTrackFromBoard}
           />
 
-          <section className="analysis-workspace">
+          <section className="analysis-workspace" ref={analysisWorkspaceRef}>
             <section className="analysis-panel">
               <div className="section-heading table-heading">
                 <div>
@@ -2339,6 +2374,16 @@ function SongAnalysisTable({
 }
 
 function ChartMovementBadge({ movement, locale }: { movement: ChartMovement; locale: Locale }) {
+  if (movement.status === 'loading') {
+    const loadingLabel = pick(locale, 'Loading week-over-week movement.', '전주 대비 변동 로딩 중')
+
+    return (
+      <span className="chart-movement loading" title={loadingLabel} aria-label={loadingLabel}>
+        …
+      </span>
+    )
+  }
+
   if (movement.status === 'unknown') {
     return (
       <span
@@ -2351,15 +2396,14 @@ function ChartMovementBadge({ movement, locale }: { movement: ChartMovement; loc
   }
 
   if (movement.status === 'new') {
+    const newLabel = pick(
+      locale,
+      `This track was not in the ${movement.previousDate} chart snapshot.`,
+      `${movement.previousDate} 수집 차트에는 없던 곡입니다`,
+    )
+
     return (
-      <span
-        className="chart-movement new"
-        title={pick(
-          locale,
-          `This track was not in the ${movement.previousDate} chart snapshot.`,
-          `${movement.previousDate} 수집 차트에는 없던 곡입니다`,
-        )}
-      >
+      <span className="chart-movement new" title={newLabel} aria-label={newLabel}>
         {pick(locale, 'NEW', '신규')}
       </span>
     )
@@ -2383,14 +2427,14 @@ function ChartMovementBadge({ movement, locale }: { movement: ChartMovement; loc
   )
 
   if (movement.status === 'up') {
-    return <span className="chart-movement up" title={title}>▲{movement.delta}</span>
+    return <span className="chart-movement up" title={title} aria-label={title}>▲{movement.delta}</span>
   }
 
   if (movement.status === 'down') {
-    return <span className="chart-movement down" title={title}>▼{Math.abs(movement.delta)}</span>
+    return <span className="chart-movement down" title={title} aria-label={title}>▼{Math.abs(movement.delta)}</span>
   }
 
-  return <span className="chart-movement same" title={title}>-</span>
+  return <span className="chart-movement same" title={title} aria-label={title}>-</span>
 }
 
 function ArtistRankTrendPanel({

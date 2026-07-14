@@ -2191,7 +2191,20 @@ function buildInitialDataScript() {
       latestSnapshot,
     };
 
-    return `<script>window.__CHART_ATLAS_INITIAL_DATA__=${safeJsonForInlineScript(payload)};</script>`;
+    // Preload the previous week's snapshot so week-over-week movement badges
+    // resolve almost immediately after hydration. Inlining the whole previous
+    // snapshot would add ~670KB to every HTML response, so a preload hint is
+    // the better trade-off. The ?v= param must mirror the client fetch exactly.
+    const sortedEntries = [...snapshotIndex.snapshots].sort((a, b) =>
+      String(b.date).localeCompare(String(a.date)),
+    );
+    const latestPosition = sortedEntries.findIndex((entry) => entry.date === latestEntry.date);
+    const previousEntry = latestPosition >= 0 ? sortedEntries[latestPosition + 1] : undefined;
+    const previousPreload = previousEntry?.file
+      ? `<link rel="preload" href="${escapeHtml(previousEntry.file)}?v=${encodeURIComponent(previousEntry.generatedAt || previousEntry.date)}" as="fetch" crossorigin="anonymous">\n`
+      : '';
+
+    return `${previousPreload}<script>window.__CHART_ATLAS_INITIAL_DATA__=${safeJsonForInlineScript(payload)};</script>`;
   } catch (error) {
     console.error(`[initial.data] ${error instanceof Error ? error.message : String(error)}`);
     return '';
