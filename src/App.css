@@ -688,6 +688,11 @@ tbody tr.selected {
   background: #eef2f7;
 }
 
+.chart-movement.loading {
+  color: #94a3b8;
+  background: #eef2f7;
+}
+
 .table-heading {
   align-items: center;
 }
@@ -1371,6 +1376,11 @@ html[data-theme='dark'] .change.flat,
 html[data-theme='dark'] .chart-movement.same,
 html[data-theme='dark'] .chart-movement.unknown {
   color: #cbd5e1;
+  background: #1e293b;
+}
+
+html[data-theme='dark'] .chart-movement.loading {
+  color: #64748b;
   background: #1e293b;
 }
 
