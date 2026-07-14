@@ -1,5 +1,8 @@
 .app-shell {
   display: grid;
+  /* Without an explicit column, the implicit auto track grows to the widest
+     child's min-content and drags the whole page past the mobile viewport. */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr) auto;
   min-height: 100vh;
   color: #172033;
@@ -189,6 +192,7 @@ button {
 
 .app-content-with-ad {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
 }
 
@@ -1107,6 +1111,25 @@ tr.selected .country-sticky {
   .date-strip,
   .analysis-workspace {
     padding-inline: 14px;
+  }
+
+  /* Pills hold long copy (top-track insight); let them wrap instead of
+     running past the narrow viewport. */
+  .status-strip span {
+    height: auto;
+    min-height: 30px;
+    padding-block: 5px;
+    white-space: normal;
+  }
+
+  .date-picker {
+    max-width: 100%;
+  }
+
+  .date-picker select {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
   }
 
   .board-panel {
