@@ -282,7 +282,8 @@ html[data-theme='dark'] .app-data-loading {
   flex-wrap: wrap;
 }
 
-.status-strip span {
+.status-strip span,
+.status-strip button.status-insight {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -298,6 +299,16 @@ html[data-theme='dark'] .app-data-loading {
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.status-strip button.status-insight {
+  cursor: pointer;
+  text-align: left;
+}
+
+.status-strip button.status-insight:hover {
+  border-color: #0f766e;
+  color: #0f766e;
 }
 
 .date-strip {
@@ -1120,7 +1131,8 @@ tr.selected .country-sticky {
 
   /* Pills hold long copy (top-track insight); let them wrap instead of
      running past the narrow viewport. */
-  .status-strip span {
+  .status-strip span,
+  .status-strip button.status-insight {
     height: auto;
     min-height: 30px;
     padding-block: 5px;
@@ -1228,6 +1240,7 @@ html[data-theme='dark'] .track-name small,
 html[data-theme='dark'] .country-cell small,
 html[data-theme='dark'] .board-track small,
 html[data-theme='dark'] .status-strip span,
+html[data-theme='dark'] .status-strip button.status-insight,
 html[data-theme='dark'] .date-picker,
 html[data-theme='dark'] .formula-note,
 html[data-theme='dark'] .playlist-status,
@@ -1250,6 +1263,7 @@ html[data-theme='dark'] .focus-pill,
 html[data-theme='dark'] .formula-note,
 html[data-theme='dark'] .tabs,
 html[data-theme='dark'] .status-strip span,
+html[data-theme='dark'] .status-strip button.status-insight,
 html[data-theme='dark'] .trend-summary span,
 html[data-theme='dark'] .trend-legend button,
 html[data-theme='dark'] .rank-tokens button,

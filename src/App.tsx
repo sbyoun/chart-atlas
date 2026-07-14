@@ -851,6 +851,7 @@ function App() {
   )
   const [snapshotHistory, setSnapshotHistory] = useState<ChartSnapshotData[]>([])
   const [snapshotHistoryLoading, setSnapshotHistoryLoading] = useState(false)
+  const analysisWorkspaceRef = useRef<HTMLElement | null>(null)
   const [analysisHistory, setAnalysisHistory] = useState<AnalysisSnapshotData[]>([])
   const [analysisHistoryLoading, setAnalysisHistoryLoading] = useState(false)
   const [selectedCountryCode, setSelectedCountryCode] = useState('US')
@@ -1343,6 +1344,17 @@ function App() {
     selectTrack(trackId)
   }
 
+  // The insight pill promises a map story; clicking it selects the top track
+  // (map highlight + song panel) and brings the below-the-fold map into view.
+  function focusTopTrackOnMap() {
+    selectTrackFromBoard(topTrack.track.id)
+    // Deferred past the commit so the analysis table's own selected-row
+    // scroll (block: 'nearest') cannot override this page-level scroll.
+    window.setTimeout(() => {
+      analysisWorkspaceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 150)
+  }
+
   function selectArtist(artistId: string) {
     setSelectedArtistId(artistId)
     setAnalysisTab('artist')
@@ -1580,7 +1592,16 @@ function App() {
               <Crown size={15} />
               {topTrack.track.title} · {topTrack.track.artist}
             </span>
-            <span className="status-insight">
+            <button
+              type="button"
+              className="status-insight"
+              title={pick(
+                locale,
+                `Show ${topTrack.track.title} on the map`,
+                `${topTrack.track.title} 차트인 국가를 지도에서 보기`,
+              )}
+              onClick={focusTopTrackOnMap}
+            >
               {topTrack.topOnes > 0
                 ? pick(
                     locale,
@@ -1592,7 +1613,8 @@ function App() {
                     `#1 nowhere, yet charting in ${topTrack.appearances} countries — the most evenly loved song this week`,
                     `0개국 1위, 그러나 ${topTrack.appearances}개국 차트인 — 이번 주 가장 고르게 사랑받는 곡`,
                   )}
-            </span>
+              <span aria-hidden="true"> ↓</span>
+            </button>
             {snapshotLoading ? <span>{pick(locale, 'Loading data', '데이터 로딩 중')}</span> : null}
           </section>
 
@@ -1631,7 +1653,7 @@ function App() {
             onSelectTrack={selectTrackFromBoard}
           />
 
-          <section className="analysis-workspace">
+          <section className="analysis-workspace" ref={analysisWorkspaceRef}>
             <section className="analysis-panel">
               <div className="section-heading table-heading">
                 <div>
